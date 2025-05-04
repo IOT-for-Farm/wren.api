@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+    <!-- Main Container -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#F8F9FA">
+        <tr>
+            <td align="center">
+                <!-- Email Card (600px max) -->
+                <table width="600" border="0" cellspacing="0" cellpadding="0">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 30px 20px; background-color: #2C3E50; text-align: center;">
+                            <h1 style="color: #FFFFFF; margin: 0; font-size: 24px;">Welcome to {{app_name}}</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding: 30px 20px; background-color: #FFFFFF; border-left: 1px solid #ECF0F1; border-right: 1px solid #ECF0F1;">
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5; margin-top: 0;">Hello {{user.first_name}},</p>
+                            
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5;">Thank you for joining {{app_name}}. Your account has been successfully created.</p>
+                            
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="padding: 15px 0; border-top: 1px solid #ECF0F1; border-bottom: 1px solid #ECF0F1;">
+                                        <p style="color: #7F8C8D; font-size: 14px; margin: 5px 0;"><strong>Email:</strong> {{user.email}}</p>
+                                        <p style="color: #7F8C8D; font-size: 14px; margin: 5px 0;"><strong>Username:</strong> {{user.username}}</p>
+                                        <p style="color: #7F8C8D; font-size: 14px; margin: 5px 0;"><strong>Full Name:</strong> {{user.first_name}} {{user.last_name}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5;">To get started, you can:</p>
+                            
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="{{dashboard_url}}" style="background-color: #2980B9; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Access Your Dashboard</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 20px; background-color: #2C3E50; text-align: center; font-size: 12px; color: #FFFFFF;">
+                            <p style="margin: 5px 0;">© {{year}} {{company_name}}. All rights reserved.</p>
+                            <p style="margin: 5px 0; font-size: 11px; color: #BDC3C7;">
+                                <a href="{{privacy_policy_url}}" style="color: #BDC3C7; text-decoration: underline;">Privacy Policy</a> | 
+                                <a href="{{terms_url}}" style="color: #BDC3C7; text-decoration: underline;">Terms of Service</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

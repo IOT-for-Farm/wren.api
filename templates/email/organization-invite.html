@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+    <!-- Main Container -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#F8F9FA">
+        <tr>
+            <td align="center">
+                <!-- Email Card (600px) -->
+                <table width="600" border="0" cellspacing="0" cellpadding="0">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td style="padding: 30px 20px; background-color: #2C3E50; text-align: center;">
+                            <!-- Organization Logo -->
+                            <table align="center" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="padding-bottom: 15px;">
+                                        <img src="{{organization.logo_url}}" alt="{{organization.name}} Logo" width="120" style="display: block; max-width: 120px; height: auto;">
+                                    </td>
+                                </tr>
+                            </table>
+                            <h1 style="color: #FFFFFF; margin: 0; font-size: 22px;">You're Invited to {{organization.name}}</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding: 30px 20px; background-color: #FFFFFF; border-left: 1px solid #ECF0F1; border-right: 1px solid #ECF0F1;">
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5; margin-top: 0;">Hello,</p>
+                            
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+                                <strong>{{invite.invited_by.first_name}} {{invite.invited_by.last_name}}</strong> ({{invite.invited_by.email}}) has invited you to join 
+                                <strong>{{organization.name}}</strong> on {{app_name}}.
+                            </p>
+                            
+                            <!-- Invite Details Box -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F8F9FA; border: 1px solid #ECF0F1; border-radius: 4px; margin: 20px 0; padding: 15px;">
+                                <tr>
+                                    <td>
+                                        <p style="color: #333333; font-size: 14px; margin: 0 0 10px 0; line-height: 1.5;">
+                                            <strong>Organization:</strong> {{organization.name}}<br>
+                                            <strong>Your Role:</strong> {{invite.role.role_name | title}}<br>
+                                            <strong>Invitation Expires:</strong> {{expiry_minutes}} minutes
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Accept Button -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 25px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{invite_url}}?token={{token}}&status=accepted"
+                                           style="background-color: #2980B9; color: #FFFFFF; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 16px;">
+                                            Accept Invitation
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Decline Button -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 25px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{invite_url}}?token={{token}}&status=declined"
+                                           style="background-color: #c73a3a; color: #FFFFFF; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 16px;">
+                                            Decline Invitation
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #7F8C8D; font-size: 14px; line-height: 1.5; border-top: 1px solid #ECF0F1; padding-top: 15px; margin-bottom: 0;">
+                                This invitation was sent to {{recipient_email}}. Not expecting this? <a href="mailto:{{support_email}}" style="color: #2980B9;">Contact support</a>.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 20px; background-color: #2C3E50; text-align: center; font-size: 12px; color: #FFFFFF;">
+                            <p style="margin: 5px 0;">© {{year}} {{company_name}}. All rights reserved.</p>
+                            <p style="margin: 5px 0; font-size: 11px; color: #BDC3C7;">
+                                <a href="{{privacy_policy_url}}" style="color: #BDC3C7; text-decoration: underline;">Privacy Policy</a> | 
+                                <a href="{{terms_url}}" style="color: #BDC3C7; text-decoration: underline;">Terms of Service</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

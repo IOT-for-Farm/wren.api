@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New Form Submission - {{response.form.form_name}}</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #F8F9FA;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ECF0F1;
+        }
+        .header {
+            padding: 25px;
+            background: #2C3E50;
+            color: white;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+        }
+        .footer {
+            padding: 20px;
+            text-align: center;
+            background: #2C3E50;
+            color: #BDC3C7;
+            font-size: 12px;
+        }
+        .response-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .response-table th {
+            background-color: #34495E;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        .response-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ECF0F1;
+        }
+        .response-table tr:nth-child(even) {
+            background-color: #F8F9FA;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2980B9;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Form Submission</h1>
+            <p>{{response.form.form_name}}</p>
+        </div>
+        
+        <div class="content">
+            <p>A new response was submitted for <strong>{{response.form.form_name}}</strong>:</p>
+            
+            <table class="response-table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Response</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in response.data %}
+                    <tr>
+                        <td><strong>{{field.label}}</strong><br><small>{{field.type}}</small></td>
+                        <td>
+                            {% if field.type == 'file' %}
+                                <a href="{{field.response}}">Download File</a>
+                            {% elif field.type == 'checkbox' %}
+                                {{ 'Yes' if field.response else 'No' }}
+                            {% else %}
+                                {{field.response}}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <p><strong>Submitted at:</strong> {{response.submission_date}}</p>
+            {% if response.email %}
+            <p><strong>Respondent email:</strong> {{response.email}}</p>
+            {% endif %}
+            
+            <a href="{{admin_link}}" class="btn">View in Admin Panel</a>
+        </div>
+        
+        <div class="footer">
+            © {{year}} {{company_name}} | 
+            <a href="{{privacy_policy_url}}" style="color:#BDC3C7;text-decoration:none;">Privacy Policy</a>
+        </div>
+    </div>
+</body>
+</html>

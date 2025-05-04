@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+    <!-- Main Container -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#F8F9FA">
+        <tr>
+            <td align="center">
+                <!-- Email Card (600px) -->
+                <table width="600" border="0" cellspacing="0" cellpadding="0">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 25px 20px; background-color: #2C3E50; text-align: center;">
+                            <h1 style="color: #FFFFFF; margin: 0; font-size: 22px;">{{app_name}} Account Deactivated</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding: 30px 20px; background-color: #FFFFFF; border-left: 1px solid #ECF0F1; border-right: 1px solid #ECF0F1;">
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5; margin-top: 0;">Hello {{user.first_name}},</p>
+                            
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5;">Your {{app_name}} account has been successfully deactivated as requested.</p>
+                            
+                            <!-- Important Info Box -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F8F9FA; border: 1px solid #ECF0F1; border-radius: 4px; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 15px;">
+                                        <p style="color: #7F8C8D; font-size: 14px; margin: 0; line-height: 1.5;">
+                                            <strong>What happens next:</strong>
+                                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                                <li>Immediate loss of account access</li>
+                                                <li>Data will be permanently deleted after {{data_retention_days}} days</li>
+                                                <li>No further emails will be sent</li>
+                                            </ul>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Reversal Option -->
+                            <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+                                <strong>Changed your mind?</strong> You can restore your account within {{reversal_days}} days by logging in normally.
+                            </p>
+                            
+                            <p style="color: #7F8C8D; font-size: 14px; line-height: 1.5; border-top: 1px solid #ECF0F1; padding-top: 15px; margin-bottom: 0;">
+                                This action was requested on {{deactivation_date}}. Contact <a href="mailto:{{support_email}}" style="color: #2980B9;">{{support_email}}</a> if this wasn't you.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 20px; background-color: #2C3E50; text-align: center; font-size: 12px; color: #FFFFFF;">
+                            <p style="margin: 5px 0;">© {{year}} {{company_name}}. All rights reserved.</p>
+                            <p style="margin: 5px 0; font-size: 11px; color: #BDC3C7;">
+                                <a href="{{privacy_policy_url}}" style="color: #BDC3C7; text-decoration: underline;">Privacy Policy</a> | 
+                                <a href="{{terms_url}}" style="color: #BDC3C7; text-decoration: underline;">Terms of Service</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
