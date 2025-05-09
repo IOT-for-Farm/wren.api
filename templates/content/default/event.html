@@ -1,0 +1,17 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">{{ event_name }}</h1>
+    <p>{{ event_intro }}</p>
+    <h2 style="color: #2C3E50;">Date & Time</h2>
+    <p>{{ event_date }} at {{ event_time }}</p>
+    <h2 style="color: #2C3E50;">Location</h2>
+    <p>{{ event_location }}</p>
+    <h2 style="color: #2C3E50;">Agenda</h2>
+    <ul>
+        {% for agenda in agenda_items %}
+        <li>{{ agenda }}</li>
+        {% endfor %}
+    </ul>
+    {% if registration_link %}
+    <p><a href="{{ registration_link }}" style="color: #2980B9; text-decoration: none;">Register Now</a> to secure your spot!</p>
+    {% endif %}
+</section>

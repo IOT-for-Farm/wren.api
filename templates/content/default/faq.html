@@ -1,0 +1,11 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">Frequently Asked Questions</h1>
+    <dl>
+      {% for data in questions_and_answers %}
+      <dt style="font-weight: bold;">{{ data.question }}</dt>
+      <dd>{{ data.answer }}</dd>
+      {% endfor %}
+    </dl>
+  
+    <p>If you have more questions, feel free to <a href="{{ contact_link }}" style="color: #2980B9; text-decoration: none;">contact us</a>.</p>
+</section>

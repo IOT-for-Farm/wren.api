@@ -1,7 +1,7 @@
 from datetime import datetime
 import enum
 from fastapi import File, Form, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Optional
 
 from api.v1.schemas.base import AdditionalInfoSchema
@@ -44,7 +44,26 @@ class ProjectBase(BaseModel):
     end_date: Optional[datetime] = Form(None)
     status: Optional[ProjectStatus] = Form(ProjectStatus.not_started)
     additional_info: Optional[List[AdditionalInfoSchema]] = None
+    
+    @field_validator("start_date")
+    def validate_start_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Start date cannot be in the past.")
+        return v
 
+    @field_validator("end_date")
+    def validate_end_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("End date cannot be in the past.")
+        return v
+
+    @model_validator(mode="after")
+    def validate_date_range(self):
+        if self.start_date and self.end_date:
+            if self.end_date < self.start_date:
+                raise ValueError("End date cannot be before start date.")
+        return self
+    
     class Config:
         from_attributes = True
 
@@ -60,6 +79,25 @@ class ProjectUpdate(BaseModel):
     end_date: Optional[datetime] = Form(None)
     status: Optional[ProjectStatus] = Form(None)
     additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
+    
+    @field_validator("start_date")
+    def validate_start_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Start date cannot be in the past.")
+        return v
+
+    @field_validator("end_date")
+    def validate_end_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("End date cannot be in the past.")
+        return v
+
+    @model_validator(mode="after")
+    def validate_date_range(self):
+        if self.start_date and self.end_date:
+            if self.end_date < self.start_date:
+                raise ValueError("End date cannot be before start date.")
+        return self
 
     class Config:
         from_attributes = True
@@ -78,6 +116,11 @@ class TaskBase(BaseModel):
     due_date: Optional[datetime] = Form(None)
     additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
     
+    @field_validator("due_date")
+    def validate_due_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date date cannot be in the past.")
+        return v
 
     class Config:
         from_attributes = True
@@ -98,7 +141,12 @@ class TaskUpdate(BaseModel):
     due_date: Optional[datetime] = Form(None)
     assignee_ids: Optional[List[str]] = Form(None)
     additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
-
+    
+    @field_validator("due_date")
+    def validate_due_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date date cannot be in the past.")
+        return v
     class Config:
         from_attributes = True
 
@@ -110,7 +158,13 @@ class MilestoneBase(BaseModel):
     name: str
     description: Optional[str] = None
     due_date: Optional[datetime] = None
-
+    
+    @field_validator("due_date")
+    def validate_due_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date date cannot be in the past.")
+        return v
+    
     class Config:
         from_attributes = True
         
@@ -119,6 +173,12 @@ class MilestoneUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     due_date: Optional[datetime] = None
+    
+    @field_validator("due_date")
+    def validate_due_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date date cannot be in the past.")
+        return v
 
     class Config:
         from_attributes = True

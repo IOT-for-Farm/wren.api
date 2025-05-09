@@ -1,0 +1,20 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">Case Study: {{ client_name }}</h1>
+    <p><strong>Industry:</strong> {{ industry }}</p>
+    <p><strong>Duration:</strong> {{ project_duration }}</p>
+  
+    <h2 style="color: #2C3E50;">Challenge</h2>
+    <p>{{ challenge }}</p>
+  
+    <h2 style="color: #2C3E50;">Solution</h2>
+    <p>{{ solution }}</p>
+  
+    <h2 style="color: #2C3E50;">Results</h2>
+    <ul>
+      {% for result in results %}
+      <li>{{ result }}</li>
+      {% endfor %}
+    </ul>
+  
+    <p><em>“{{ testimonial }}”</em> – {{ client_representative }}</p>
+</section>

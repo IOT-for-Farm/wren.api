@@ -1,0 +1,58 @@
+<table>
+    <tr>
+        <td style="padding: 20px; background-color: #F8F9FA; font-family: Arial, sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: auto;">
+            <tr>
+              <td style="color:#2C3E50; font-size:20px; font-weight:bold; padding-bottom:15px;">
+                You’re Invited: <span style="color:#2980B9;">{{ event_name }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:#333333; font-size:14px; line-height:1.6;">
+                <p style="margin-top: 0;">Dear {{ recipient_name }},</p>
+                <p>
+                  We are excited to invite you to <strong>{{ event_name }}</strong>, a corporate event hosted by Wren Tech focused on <strong>{{ event_focus }}</strong>.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 15px 0;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px; background-color: #ffffff; color: #7F8C8D;">📅 Date:</td>
+                    <td style="padding: 8px; background-color: #ffffff; color: #333333;">{{ event_date }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; background-color: #F8F9FA; color: #7F8C8D;">⏰ Time:</td>
+                    <td style="padding: 8px; background-color: #F8F9FA; color: #333333;">{{ event_time }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; background-color: #ffffff; color: #7F8C8D;">📍 Location:</td>
+                    <td style="padding: 8px; background-color: #ffffff; color: #333333;">{{ event_location }}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:#333333; font-size:14px; line-height:1.6; padding-top:10px;">
+                <p>Please RSVP by <strong>{{ rsvp_deadline }}</strong> by clicking the button below.</p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 20px 0;">
+                <a href="{{ rsvp_link }}" style="background-color: #2980B9; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; font-size: 14px; display: inline-block;">RSVP Now</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:#333333; font-size:14px; line-height:1.6;">
+                <p>We look forward to seeing you there.</p>
+                <p>Warm regards,<br/>
+                  <strong>{{ sender_name }}</strong><br/>
+                  {{ sender_position }}<br/>
+                  Wren Tech</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+</table>  

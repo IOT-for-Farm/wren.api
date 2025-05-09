@@ -1,0 +1,25 @@
+<section style="font-family: Arial, sans-serif; color: #333; padding: 20px; max-width: 800px; margin: auto;">
+    <h1 style="color: #2C3E50;">We're Hiring: Software Engineer</h1>
+    <p><strong>Location:</strong> {{ job_location }}</p>
+    <p><strong>Department:</strong> {{ job_department }}</p>
+  
+    <h2 style="color: #2C3E50;">Job Description</h2>
+    <p>{{ job_description }}</p>
+  
+    <h2 style="color: #2C3E50;">Key Responsibilities</h2>
+    <ul>
+      {% for responsibility in responsibilities %}
+      <li>{{ responsibility }}</li>
+      {% endfor %}
+    </ul>
+  
+    <h2 style="color: #2C3E50;">Qualifications</h2>
+    <ul>
+      {% for qualification in qualifications %}
+      <li>{{ qualification }}</li>
+      {% endfor %}
+    </ul>
+  
+    <p><strong>Apply Here:</strong><br>
+    <a href="{{ apply_link }}" style="color: #2980B9; text-decoration: none;">{{ apply_link_text }}</a></p>
+</section>

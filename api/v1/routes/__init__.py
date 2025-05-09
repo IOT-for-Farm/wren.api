@@ -15,6 +15,8 @@ from api.v1.routes.layout import layout_router
 from api.v1.routes.comment import comment_router
 from api.v1.routes.review import review_router
 from api.v1.routes.project import project_router
+from api.v1.routes.content import content_router
+from api.v1.routes.content_template import content_template_router
 
 v1_router = APIRouter(prefix='/api/v1')
 
@@ -24,6 +26,8 @@ v1_router.include_router(user_router)
 v1_router.include_router(organization_router)
 v1_router.include_router(apikey_router)
 v1_router.include_router(department_router)
+v1_router.include_router(content_router)
+v1_router.include_router(content_template_router)
 v1_router.include_router(project_router)
 v1_router.include_router(template_router)
 v1_router.include_router(layout_router)

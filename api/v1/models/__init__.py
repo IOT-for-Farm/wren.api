@@ -27,3 +27,8 @@ from api.v1.models.organization import (
     Organization, OrganizationMember,
     OrganizationRole
 )
+from api.v1.models.content import (
+    Content, ContentAnalytics, ContentPromotion,
+    ContentTag, ContentTarget, ContentTemplate,
+    ContentTranslation, ContentVersion
+)

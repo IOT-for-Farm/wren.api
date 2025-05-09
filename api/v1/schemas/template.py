@@ -1,3 +1,4 @@
+from fastapi import File, Form, UploadFile
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List, Any
 from datetime import datetime
@@ -64,5 +65,11 @@ class RenderTemplate(BaseModel):
     context: dict
 
 
-class SendEmail(RenderTemplate):
-    recipients: List[EmailStr]
+# class SendEmail(RenderTemplate):
+#     recipients: List[EmailStr]
+
+
+class SendEmail(BaseModel):
+    attachments: Optional[List[UploadFile]] = File(None)
+    recipients: str = Form(...)
+    context: str = Form(...)

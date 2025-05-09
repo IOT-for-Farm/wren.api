@@ -1,0 +1,31 @@
+<article style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 700px; margin: 0 auto; padding: 20px;">
+    <header style="text-align: center; padding-bottom: 30px;">
+      <h1 style="font-size: 32px; color: #2C3E50;">{{ title }}</h1>
+      <p style="color: #7F8C8D; font-size: 14px;">By {{ author }} &bullet; {{ publish_date }}</p>
+    </header>
+  
+    <section>
+      <img src="{{ cover_image_url }}" alt="Cover Image" style="width: 100%; border-radius: 8px; margin-bottom: 20px;" />
+      
+      <p>{{ introduction_paragraph }}</p>
+
+      {% for section in sections %}
+      <h2 style="color: #2C3E50;">{{ section.title }}</h2>
+      <p>{{ section.content }}</p>
+      {% endfor %}
+  
+      {% if quote_content %}
+      <blockquote style="border-left: 4px solid #2980B9; padding-left: 15px; margin: 20px 0; color: #7F8C8D;">
+        {{ quote_content }}
+      </blockquote>
+      {% endif %}
+  
+      <p>{{ conclusion_paragraph }}</p>
+    </section>
+  
+    <footer style="margin-top: 40px; font-size: 13px; color: #7F8C8D; border-top: 1px solid #ECF0F1; padding-top: 10px;">
+      <p>Tags: {{ tags }}</p>
+      <p>© {{ year }} {{ organization_name }}. All rights reserved.</p>
+    </footer>
+</article>
+  

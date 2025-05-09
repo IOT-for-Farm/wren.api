@@ -1,0 +1,33 @@
+<table width="100%" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; color: #333333;">
+    <tr>
+      <td style="padding: 20px;">
+        <p style="font-size: 16px; margin-bottom: 15px;">Dear {{ client_name }},</p>
+        <p style="margin-bottom: 15px;">Please find below the details of your requested quotation for <strong>{{ service_name }}</strong>:</p>
+  
+        <table cellpadding="10" cellspacing="0" width="100%" style="border: 1px solid #ECF0F1; background-color: #F8F9FA; margin-bottom: 20px;">
+          <tr>
+            <td><strong>Service:</strong></td>
+            <td>{{ service_name }}</td>
+          </tr>
+          <tr>
+            <td><strong>Price:</strong></td>
+            <td>{{ price }}</td>
+          </tr>
+          <tr>
+            <td><strong>Delivery Time:</strong></td>
+            <td>{{ delivery_time }}</td>
+          </tr>
+        </table>
+  
+        <p style="margin-bottom: 20px;">Please feel free to contact us if you have any questions or wish to proceed with the quote.</p>
+  
+        <table cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td align="center">
+              <a href="{{ proceed_link }}" style="display: inline-block; background-color: #2980B9; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Accept Quotation</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+</table>  

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from slugify import slugify
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from api.core.dependencies.email_sending_service import send_email
@@ -266,7 +267,6 @@ async def create_form_template(
 async def get_form_templates(
     organization_id: str,
     template_name: str = None,
-    get_default_templates: bool = False,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
@@ -291,8 +291,18 @@ async def get_form_templates(
         search_fields={
             'template_name': template_name,
         },
-        organization_id=organization_id if not get_default_templates else '-1'
     )
+    
+    query = query.filter(
+        or_(
+            FormTemplate.organization_id==organization_id,
+            FormTemplate.organization_id=='-1',
+            FormTemplate.organization_id==None,
+        )
+    )
+    
+    count = query.count()
+    form_templates = query.all()
     
     return paginator.build_paginated_response(
         items=[form_template.to_dict() for form_template in form_templates],

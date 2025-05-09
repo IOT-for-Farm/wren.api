@@ -1,0 +1,15 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 700px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">{{ feature_title }} - Now Available!</h1>
+    <p>{{ product_name }} has just received a major update!</p>
+  
+    <h2 style="color: #2C3E50;">New Features</h2>
+    <ul>
+        {% for feature in features %}
+        <li>{{ feature }}</li>
+        {% endfor %}
+    </ul>
+  
+    <p style="color: #2980B9;"><strong>Get started now:</strong> <a href="{{ feature_link }}" style="color: #2980B9; text-decoration: none;">Learn More</a></p>
+  
+    <p>We hope this update enhances your experience with {{ product_name }}. Feel free to contact us for support.</p>
+</section>

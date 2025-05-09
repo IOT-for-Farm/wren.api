@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import BackgroundTasks, HTTPException
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
@@ -50,7 +50,7 @@ class TemplateService:
                 body=rendered_body,
                 subject=rendered_subject,
                 footer=rendered_footer,
-                # **context
+                **context
             )
             
             return final_html, rendered_subject, rendered_footer, rendered_body
@@ -72,6 +72,7 @@ class TemplateService:
         template_id: str, 
         context: dict,
         recipients: List[EmailStr],
+        attachments: Optional[List[str]] = None
     ):
         
         # Fetch the template
@@ -98,7 +99,8 @@ class TemplateService:
             html_template_string=html,
             subject=subject if subject else "No subject",
             template_data=context,
-            apply_default_template_data=False
+            apply_default_template_data=False,
+            attachments=attachments
         )
         
     

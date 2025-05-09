@@ -1,0 +1,14 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 700px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">{{ episode_title }}</h1>
+    <p>{{ episode_description }}</p>
+  
+    <h2 style="color: #2C3E50;">Listen Now</h2>
+    <div style="text-align: center;">
+      <audio controls>
+        <source src="{{ podcast_url }}" type="audio/mp3">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+  
+    <p>Subscribe to our podcast to stay updated on upcoming episodes: <a href="{{ podcast_link }}" style="color: #2980B9; text-decoration: none;">{{ podcast_link_text }}</a></p>
+</section>

@@ -1,0 +1,17 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">{{ webinar_title }}</h1>
+    <p>{{ webinar_intro }}</p>
+    <h2 style="color: #2C3E50;">Date & Time</h2>
+    <p>{{ webinar_date }} at {{ webinar_time }}</p>
+    <h2 style="color: #2C3E50;">Host</h2>
+    <p>{{ host_name }}</p>
+    <h2 style="color: #2C3E50;">Key Topics</h2>
+    <ul>
+        {% for topic in topics %}
+        <li>{{ topic }}</li>
+        {% endfor %}
+    </ul>
+    {% if registration_link %}
+    <p><a href="{{ registration_link }}" style="color: #2980B9; text-decoration: none;">Register Now</a> to secure your spot!</p>
+    {% endif %}
+</section>

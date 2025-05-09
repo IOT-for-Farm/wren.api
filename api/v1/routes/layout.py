@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -87,9 +88,21 @@ async def get_layouts(
         search_fields={
             'name': name,
         },
-        organization_id=organization_id,
+        # organization_id=organization_id,
         feature=feature
     )
+    
+    # Organization id filter
+    query = query.filter(
+        or_(
+            Layout.organization_id == organization_id,
+            Layout.organization_id == '-1',
+            Layout.organization_id == None,
+        )
+    )
+    
+    count = query.count()
+    layouts = query.all()
     
     return paginator.build_paginated_response(
         items=[layout.to_dict() for layout in layouts],

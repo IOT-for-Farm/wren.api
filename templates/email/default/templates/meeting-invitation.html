@@ -1,0 +1,33 @@
+<!-- Meeting Invitation Layout -->
+<table width="100%" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif;">
+    <tr>
+      <td style="padding: 20px 0;">
+        <h2 style="color: #2C3E50; font-size: 18px;">📅 Meeting Scheduled</h2>
+        <p style="color: #333333; font-size: 14px; margin-bottom: 10px;">
+          Dear {{ recipient_name }},<br>
+          You have a meeting scheduled. Here are the details:
+        </p>
+  
+        <table cellpadding="10" cellspacing="0" width="100%" style="background-color: #F8F9FA; border: 1px solid #ECF0F1; font-size: 13px; margin-top: 10px;">
+          <tr>
+            <td style="color: #7F8C8D;">Subject:</td>
+            <td style="color: #333333;">{{ meeting_subject }}</td>
+          </tr>
+          <tr>
+            <td style="color: #7F8C8D;">Date:</td>
+            <td style="color: #333333;">{{ meeting_date }}</td>
+          </tr>
+          <tr>
+            <td style="color: #7F8C8D;">Time:</td>
+            <td style="color: #333333;">{{ meeting_time }}</td>
+          </tr>
+          <tr>
+            <td style="color: #7F8C8D;">Location:</td>
+            <td style="color: #333333;">{{ meeting_location }}</td>
+          </tr>
+        </table>
+  
+        <a href="{{ calendar_link }}" style="display: inline-block; margin-top: 15px; background-color: #2980B9; color: #ffffff; padding: 10px 20px; font-size: 14px; text-decoration: none; border-radius: 4px;">Add to Calendar</a>
+      </td>
+    </tr>
+</table>

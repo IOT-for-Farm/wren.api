@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import and_, or_, desc, asc
 from sqlalchemy.orm import Session
@@ -533,7 +533,8 @@ class OrganizationService:
         subject: str,
         template_name: Optional[str]= None,
         html_string: Optional[str]= None,
-        context: dict = {}
+        context: dict = {},
+        attachments: Optional[List[str]] = None
     ):
         '''This function is ised to send an email to an organization at once. Only Owners and Admins will receive the emails'''
         
@@ -558,5 +559,6 @@ class OrganizationService:
             template_name=template_name,
             html_template_string=html_string,
             subject=subject,
-            template_data=context
+            template_data=context,
+            attachments=attachments
         )

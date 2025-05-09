@@ -13,7 +13,8 @@ ORG_PERMS = [
 CONTENT_PERMS = [
     "content:create", "content:update", "content:delete",
     "content:publish", "content:schedule", "content:view",
-    "content:approve"
+    "content:approve", "content:rollback-version",
+    "content-template:create", "content-template:update", "content-template:delete",
 ]
 
 CAMPAIGN_PERMS = [

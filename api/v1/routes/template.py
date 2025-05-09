@@ -1,5 +1,7 @@
+import json
 from typing import List
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from api.core.dependencies.email_sending_service import send_email
@@ -115,10 +117,19 @@ async def get_templates(
         search_fields={
             'name': name,
         },
-        organization_id=organization_id,
+        # organization_id=organization_id,
         feature=feature,
         is_active=is_active,
         layout_id=layout_id
+    )
+    
+    # Organization id filter
+    query = query.filter(
+        or_(
+            Template.organization_id == organization_id,
+            Template.organization_id == '-1',
+            Template.organization_id == None,
+        )
     )
     
     # tag_ids = []
@@ -131,8 +142,8 @@ async def get_templates(
             .filter(Tag.name.in_(tags_list))
         )
         
-        count = query.count()    
-        templates = query.all()
+    count = query.count()    
+    templates = query.all()
     
     return paginator.build_paginated_response(
         items=[template.to_dict() for template in templates],
@@ -309,8 +320,8 @@ async def render_template(
 async def send_email_from_template(
     id: str,
     organization_id: str,
-    payload: template_schemas.SendEmail,
     bg_tasks: BackgroundTasks,
+    payload: template_schemas.SendEmail = Form(media_type="multipart/form-data"),
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
@@ -328,8 +339,9 @@ async def send_email_from_template(
         bg_tasks=bg_tasks,
         organization_id=organization_id,
         template_id=id,
-        context=payload.context,
-        recipients=payload.recipients
+        context=json.loads(payload.context),
+        recipients=[recipient.strip() for recipient in payload.recipients.split(',')],
+        attachments=payload.attachments
     )
     
     return success_response(

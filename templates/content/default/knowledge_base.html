@@ -1,0 +1,11 @@
+<section style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: auto; padding: 20px;">
+    <h1 style="color: #2C3E50;">{{ article_title }}</h1>
+    <p>{{ article_intro }}</p>
+    
+    {% for step in steps %}
+        <h2 style="color: #2C3E50;">Step {{ loop.index }}: {{ step.title }}</h2>
+        <p>{{ step.description }}</p>
+    {% endfor %}
+
+    <p>If you have any issues, refer to the <a href="{{ support_link }}" style="color: #2980B9; text-decoration: none;">support page</a>.</p>
+</section>
