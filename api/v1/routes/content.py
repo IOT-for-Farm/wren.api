@@ -6,13 +6,14 @@ from slugify import slugify
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from api.core.dependencies.celery.worker import generate_content_translations
 from api.db.database import get_db
 from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.tag import Tag
 from api.v1.models.user import User
-from api.v1.models.content import Content, ContentTag, ContentTemplate, ContentVersion
+from api.v1.models.content import Content, ContentTag, ContentTemplate, ContentTranslation, ContentVersion
 from api.v1.schemas.file import FileBase
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
@@ -132,6 +133,9 @@ async def create_content(
             )
     
     logger.info(f'New content created with name {content.title}')
+    
+    # Generate translations for the content
+    generate_content_translations.delay(content=content.to_dict())
     
     return success_response(
         message=f"Content created successfully",
@@ -329,6 +333,7 @@ async def update_content(
     if payload.content_type:
         payload.content_type = payload.content_type if isinstance(payload.content_type, str) else payload.content_type.value
         
+        
     # Create new content version
     ContentVersion.create(
         db=db,
@@ -344,6 +349,14 @@ async def update_content(
         cover_image_url=previous_content.cover_image_url,
     )
 
+    # Check if body or title were updated
+    if (payload.title != previous_content.title) or (payload.body != previous_content.body):
+        generate_content_translations.delay(content={
+            'id': previous_content.id,
+            'title': payload.title,
+            'body': payload.body,
+        })
+    
     content = Content.update(
         db=db,
         id=id,
@@ -351,6 +364,7 @@ async def update_content(
         **payload.model_dump(exclude_unset=True, exclude=['cover_image', 'attachments', 'tag_ids'])
     )
     
+        
     if payload.tag_ids:
         tag_ids = payload.tag_ids.split(',')
         for tag_id in tag_ids:
@@ -514,4 +528,46 @@ async def rollback_to_content_version(
         message=f"Rollback to content version {content_version.version} successful",
         status_code=200,
         data=content.to_dict()
+    )
+
+
+# ================== CONTENT TRANSLATIONS ===================
+
+@content_router.get("/{id}/translations", status_code=200)
+async def get_content_translations(
+    id: str,
+    organization_id: str,
+    language_code: str = None,
+    page: int = 1,
+    per_page: int = 10,
+    sort_by: str = 'created_at',
+    order: str = 'desc',
+    db: Session=Depends(get_db), 
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+):
+    """Endpoint to get all content translations"""
+    
+    AuthService.belongs_to_organization(
+        db=db, entity=entity,
+        organization_id=organization_id
+    )
+
+    query, translations, count = ContentTranslation.fetch_by_field(
+        db, 
+        sort_by=sort_by,
+        order=order.lower(),
+        page=page,
+        per_page=per_page,
+        search_fields={},
+        organization_id=organization_id,
+        content_id=id,
+        language_code=language_code
+    )
+    
+    return paginator.build_paginated_response(
+        items=[translation.to_dict() for translation in translations],
+        endpoint=f'/contents/{id}/translations',
+        page=page,
+        size=per_page,
+        total=count,
     )

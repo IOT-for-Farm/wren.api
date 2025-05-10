@@ -160,10 +160,6 @@ class ContentAnalyticsBase(BaseModel):
     referrer_url: Optional[str] = Field(None, description="Where the user came from")
 
 
-class CreateContentAnalytics(ContentAnalyticsBase):
-    content_id: str
-
-
 class UpdateContentAnalytics(BaseModel):
     views: Optional[int] = None
     clicks: Optional[int] = None

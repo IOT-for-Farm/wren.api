@@ -5,6 +5,7 @@ from typing import List, Optional, Type, Any
 from pydantic import BaseModel, create_model
 from requests import Session
 from sqlalchemy.inspection import inspect
+from googletrans import Translator
 
 from api.v1.models.organization import Organization
 from api.v1.models.user import User
@@ -118,3 +119,11 @@ def check_user_is_owner(user_id: str, model_instance, user_fk_name: str):
     
     if user_id != resource_user_id:
         raise HTTPException(403, 'You do not have permission to access this resource')
+
+
+async def translate_text(text: str, destination_language: str='fr'):
+    '''Function to help translate text with googletrans package'''
+    
+    translator = Translator()
+    result = await translator.translate(text, dest=destination_language)
+    return result.text

@@ -1,0 +1,47 @@
+LANGUAGE_CODES = [
+    "en",  # English
+    "fr",  # French
+    "es",  # Spanish
+    "de",  # German
+    "it",  # Italian
+    "pt",  # Portuguese
+    "nl",  # Dutch
+    "ru",  # Russian
+    "zh-cn",  # Chinese (Simplified)
+    "zh-tw",  # Chinese (Traditional)
+    "ja",  # Japanese
+    "ko",  # Korean
+    "ar",  # Arabic
+    "hi",  # Hindi
+    "sw",  # Swahili
+    "ha",  # Hausa
+    "yo",  # Yoruba
+    "ig",  # Igbo
+    "tr",  # Turkish
+    "pl",  # Polish
+    "cs",  # Czech
+    "fi",  # Finnish
+    "el",  # Greek
+    "hu",  # Hungarian
+    "id",  # Indonesian
+    "ms",  # Malay
+    "th",  # Thai
+    "uk",  # Ukrainian
+    "vi",  # Vietnamese
+    "he",  # Hebrew
+    "bn",  # Bengali
+    "so",  # Somali
+    "tl",  # Filipino
+    "ro",  # Romanian
+    "sv",  # Swedish
+    "da",  # Danish
+    "no",  # Norwegian
+    "sl",  # Slovenian
+    "sr",  # Serbian
+    "hr",  # Croatian
+    "bg",  # Bulgarian
+    "et",  # Estonian
+    "lt",  # Lithuanian
+    "lv",  # Latvian
+    "sk",  # Slovak
+]
