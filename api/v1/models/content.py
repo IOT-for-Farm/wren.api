@@ -6,11 +6,11 @@ from api.core.base.base_model import BaseTableModel
 from api.v1.schemas.content import ContentReviewStatus, ContentStatus, ContentType, ContentVisibility
 
 
-class ContentTag(BaseTableModel):
-    __tablename__ = 'content_tags'
+# class ContentTag(BaseTableModel):
+#     __tablename__ = 'content_tags'
     
-    content_id = sa.Column(sa.String, sa.ForeignKey("contents.id"), nullable=False)
-    tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)
+#     content_id = sa.Column(sa.String, sa.ForeignKey("contents.id"), nullable=False)
+#     tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)
     
     
 class Content(BaseTableModel):
@@ -49,11 +49,19 @@ class Content(BaseTableModel):
     organization = relationship("Organization", backref='organization_contents')
     author = relationship("User", backref='user_contents', lazy='selectin')
     versions = relationship("ContentVersion", back_populates="content", cascade="all, delete-orphan")
+    # tags = relationship(
+    #     "Tag",
+    #     secondary='content_tags',
+    #     primaryjoin="and_(Content.id==ContentTag.content_id, ContentTag.is_deleted==False)",
+    #     secondaryjoin="and_(Tag.id==ContentTag.tag_id, Tag.is_deleted==False)",
+    #     backref="contents",
+    #     lazy='selectin'
+    # )
     tags = relationship(
         "Tag",
-        secondary='content_tags',
-        primaryjoin="and_(Content.id==ContentTag.content_id, ContentTag.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==ContentTag.tag_id, Tag.is_deleted==False)",
+        secondary='tag_association',
+        primaryjoin="and_(Content.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==contents, TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
         backref="contents",
         lazy='selectin'
     )

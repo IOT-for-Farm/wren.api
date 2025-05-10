@@ -5,11 +5,11 @@ from sqlalchemy.orm import relationship, Session
 from api.core.base.base_model import BaseTableModel
 
 
-class TemplateTag(BaseTableModel):
-    __tablename__ = 'template_tags'
+# class TemplateTag(BaseTableModel):
+#     __tablename__ = 'template_tags'
     
-    template_id = sa.Column(sa.String, sa.ForeignKey("templates.id"), nullable=False)
-    tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)
+#     template_id = sa.Column(sa.String, sa.ForeignKey("templates.id"), nullable=False)
+#     tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)
 
 
 class Template(BaseTableModel):
@@ -27,11 +27,20 @@ class Template(BaseTableModel):
     feature = sa.Column(sa.String(191), nullable=True, index=True)  # should be nullable
 
     # tags = relationship("Tag", secondary=email_template_tags, backref="email_templates")
+    # tags = relationship(
+    #     "Tag",
+    #     secondary='template_tags',
+    #     primaryjoin="and_(Template.id==TemplateTag.template_id, TemplateTag.is_deleted==False)",
+    #     secondaryjoin="and_(Tag.id==TemplateTag.tag_id, Tag.is_deleted==False)",
+    #     backref="templates",
+    #     lazy='selectin'
+    # )
+    
     tags = relationship(
         "Tag",
-        secondary='template_tags',
-        primaryjoin="and_(Template.id==TemplateTag.template_id, TemplateTag.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==TemplateTag.tag_id, Tag.is_deleted==False)",
+        secondary='tag_association',
+        primaryjoin="and_(Template.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==templates, TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
         backref="templates",
         lazy='selectin'
     )

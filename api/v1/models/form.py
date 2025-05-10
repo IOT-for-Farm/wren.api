@@ -13,13 +13,22 @@ class FormTemplate(BaseTableModel):
     purpose = sa.Column(sa.String, nullable=True)
     fields = sa.Column(sa.JSON)  # contains the form fields. Should contain label, type eg text, textarea, number, email and all other html field types
     
+    # tags = relationship(
+    #     "Tag",
+    #     secondary='form_template_tags',
+    #     primaryjoin="and_(FormTemplate.id==FormTemplateTag.form_template_id, FormTemplateTag.is_deleted==False)",
+    #     secondaryjoin="and_(Tag.id==FormTemplateTag.tag_id, Tag.is_deleted==False)",
+    #     backref="form_templates",
+    #     viewonly=True,
+    #     lazy='selectin'
+    # )
+    
     tags = relationship(
         "Tag",
-        secondary='form_template_tags',
-        primaryjoin="and_(FormTemplate.id==FormTemplateTag.form_template_id, FormTemplateTag.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==FormTemplateTag.tag_id, Tag.is_deleted==False)",
+        secondary='tag_association',
+        primaryjoin="and_(FormTemplate.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==form_templates, TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
         backref="form_templates",
-        viewonly=True,
         lazy='selectin'
     )
     
@@ -60,8 +69,8 @@ class FormResponse(BaseTableModel):
     form = relationship('Form', back_populates='responses')
 
 
-class FormTemplateTag(BaseTableModel):
-    __tablename__ = "form_template_tags"
+# class FormTemplateTag(BaseTableModel):
+#     __tablename__ = "form_template_tags"
     
-    form_template_id = sa.Column(sa.String, sa.ForeignKey("form_templates.id"), nullable=False)
-    tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)
+#     form_template_id = sa.Column(sa.String, sa.ForeignKey("form_templates.id"), nullable=False)
+#     tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)

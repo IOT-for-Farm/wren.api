@@ -39,6 +39,3 @@ class Comment(BaseTableModel):
     @hybrid_method
     def downvote(self):
         self.downvotes += 1
-
-
-

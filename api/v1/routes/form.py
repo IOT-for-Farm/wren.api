@@ -9,8 +9,8 @@ from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.user import User
-from api.v1.models.tag import Tag
-from api.v1.models.form import Form, FormResponse, FormTemplate, FormTemplateTag
+from api.v1.models.tag import Tag, TagAssociation
+from api.v1.models.form import Form, FormResponse, FormTemplate
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
 from api.v1.services.form import FormService
@@ -240,7 +240,8 @@ async def create_form_template(
                 db, 
                 throw_error=False,
                 id=tag_id, 
-                organization_id=payload.organization_id
+                organization_id=payload.organization_id,
+                model_type='form_templates'
             )
             
             # If tag does not exist, skip
@@ -248,10 +249,11 @@ async def create_form_template(
                 continue
             
             # Create template tag association
-            FormTemplateTag.create(
+            TagAssociation.create(
                 db=db,
-                form_template_id=form_template.id,
-                tag_id=tag_id
+                entity_id=form_template.id,
+                tag_id=tag_id,
+                model_type='form_templates'
             )
 
     logger.info(f"Form template created with id {form_template.id} and name {form_template.template_name}")
@@ -367,7 +369,8 @@ async def update_form_template(
                 db, 
                 throw_error=False,
                 id=tag_id, 
-                organization_id=form_template.organization_id
+                organization_id=form_template.organization_id,
+                model_type='form_templates'
             )
             
             # If tag does not exist, skip
@@ -375,21 +378,23 @@ async def update_form_template(
                 continue
             
             # Check the tag association
-            tag_association = FormTemplateTag.fetch_one_by_field(
+            tag_association = TagAssociation.fetch_one_by_field(
                 db,
                 throw_error=False,
-                form_template_id=id,
-                tag_id=tag_id
+                entity_id=id,
+                tag_id=tag_id,
+                model_type='form_templates'
             )
             
             # If tag association exists, skip
             if tag_association:
                 continue
             
-            FormTemplateTag.create(
+            TagAssociation.create(
                 db=db,
-                form_template_id=id,
-                tag_id=tag_id
+                entity_id=id,
+                tag_id=tag_id,
+                model_type='form_templates'
             )
 
     logger.info(f"Form template updated with ID: {form_template.id}")

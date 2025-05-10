@@ -18,7 +18,7 @@ class Category(BaseTableModel):
     photos = relationship(
         'File',
         backref='category_files',
-        primaryjoin='and_(Category.id == foreign(File.model_id), File.is_deleted == False)',
+        primaryjoin='and_(Category.id == foreign(File.model_id), File.is_deleted == False, Category.organization_id==File.organization_id)',
         lazy='selectin'
     )
     
@@ -39,4 +39,11 @@ class Category(BaseTableModel):
     #     # lazy='selectin'
     # )
 
+class CategoryAssociation(BaseTableModel):
+    __tablename__ = "category_association"
+    
+    entity_id = sa.Column(sa.String, nullable=False, index=True)
+    model_type = sa.Column(sa.String, nullable=False, index=True)
+    category_id = sa.Column(sa.String, sa.ForeignKey('categories.id'), nullable=False, index=True)
 
+    category = relationship("Category", backref="category_assoc")

@@ -11,8 +11,8 @@ from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.layout import Layout
 from api.v1.models.user import User
-from api.v1.models.tag import Tag
-from api.v1.models.template import Template, TemplateTag
+from api.v1.models.tag import Tag, TagAssociation
+from api.v1.models.template import Template
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
 from api.v1.services.template import TemplateService
@@ -62,7 +62,8 @@ async def create_template(
                 db, 
                 throw_error=False,
                 id=tag_id, 
-                organization_id=payload.organization_id
+                organization_id=payload.organization_id,
+                model_type='templates'
             )
             
             # If tag does not exist, skip
@@ -70,10 +71,11 @@ async def create_template(
                 continue
             
             # Create template tag association
-            TemplateTag.create(
+            TagAssociation.create(
                 db=db,
-                template_id=template.id,
-                tag_id=tag_id
+                entity_id=template.id,
+                tag_id=tag_id,
+                model_type='templates'
             )
     
     logger.info(f"Template created with ID: {template.id}")
@@ -137,8 +139,8 @@ async def get_templates(
         tags_list = [tag.strip() for tag in tags.split(',')]      
         query = (
             query
-            .join(TemplateTag, TemplateTag.template_id==Template.id)
-            .join(Tag, Tag.id == TemplateTag.tag_id)
+            .join(TagAssociation, TagAssociation.entity_id==Template.id)
+            .join(Tag, Tag.id == TagAssociation.tag_id)
             .filter(Tag.name.in_(tags_list))
         )
         
@@ -211,6 +213,7 @@ async def update_template(
                 db, 
                 throw_error=False,
                 id=tag_id, 
+                model_type='templates',
                 organization_id=organization_id
             )
             
@@ -219,11 +222,18 @@ async def update_template(
                 continue
             
             # Check the tag association
-            tag_association = TemplateTag.fetch_one_by_field(
+            # tag_association = TemplateTag.fetch_one_by_field(
+            #     db,
+            #     throw_error=False,
+            #     template_id=id,
+            #     tag_id=tag_id
+            # )
+            tag_association = TagAssociation.fetch_one_by_field(
                 db,
                 throw_error=False,
-                template_id=id,
-                tag_id=tag_id
+                entity_id=id,
+                model_type='templates',
+                tag_id=tag_id,
             )
             
             # If tag association exists, skip
@@ -231,10 +241,11 @@ async def update_template(
                 continue
             
             # Create template tag association
-            TemplateTag.create(
+            TagAssociation.create(
                 db=db,
-                template_id=template.id,
-                tag_id=tag_id
+                entity_id=template.id,
+                tag_id=tag_id,
+                model_type='templates'
             )
 
     logger.info(f"Template updated with ID: {template.id}")

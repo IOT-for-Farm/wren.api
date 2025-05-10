@@ -21,7 +21,7 @@ logger = create_logger(__name__)
 async def create_location(
     payload: location_schemas.LocationBase,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to create a new location
 
@@ -52,7 +52,7 @@ async def get_locations(
     sort_by: str = 'created_at',
     order: str = 'desc',
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get all locations"""
     
@@ -80,7 +80,7 @@ async def get_locations(
 async def get_location_by_id(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get a location by ID or unique_id in case ID fails.
     Args:
@@ -103,7 +103,7 @@ async def update_location(
     id: str,
     payload: location_schemas.UpdateLocation,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to update a location
 
@@ -131,7 +131,7 @@ async def update_location(
 async def delete_location(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to delete a location
 

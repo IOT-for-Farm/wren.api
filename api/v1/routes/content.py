@@ -11,9 +11,9 @@ from api.db.database import get_db
 from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
-from api.v1.models.tag import Tag
+from api.v1.models.tag import Tag, TagAssociation
 from api.v1.models.user import User
-from api.v1.models.content import Content, ContentTag, ContentTemplate, ContentTranslation, ContentVersion
+from api.v1.models.content import Content, ContentTemplate, ContentTranslation, ContentVersion
 from api.v1.schemas.file import FileBase
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
@@ -118,7 +118,8 @@ async def create_content(
                 db, 
                 throw_error=False,
                 id=tag_id, 
-                organization_id=payload.organization_id
+                organization_id=payload.organization_id,
+                model_type='contents'
             )
             
             # If tag does not exist, skip
@@ -126,10 +127,11 @@ async def create_content(
                 continue
             
             # Create template tag association
-            ContentTag.create(
+            TagAssociation.create(
                 db=db,
-                content_id=content.id,
-                tag_id=tag_id
+                entity_id=content.id,
+                tag_id=tag_id,
+                model_type='contents'
             )
     
     logger.info(f'New content created with name {content.title}')
@@ -200,8 +202,8 @@ async def get_contents(
         tags_list = [tag.strip() for tag in tags.split(',')]      
         query = (
             query
-            .join(ContentTag, ContentTag.content_id==Content.id)
-            .join(Tag, Tag.id == ContentTag.tag_id)
+            .join(TagAssociation, TagAssociation.entity_id==Content.id)
+            .join(Tag, Tag.id == TagAssociation.tag_id)
             .filter(Tag.name.in_(tags_list))
         )
         
@@ -364,7 +366,6 @@ async def update_content(
         **payload.model_dump(exclude_unset=True, exclude=['cover_image', 'attachments', 'tag_ids'])
     )
     
-        
     if payload.tag_ids:
         tag_ids = payload.tag_ids.split(',')
         for tag_id in tag_ids:
@@ -373,7 +374,8 @@ async def update_content(
                 db, 
                 throw_error=False,
                 id=tag_id, 
-                organization_id=organization_id
+                organization_id=organization_id,
+                model_type='contents'
             )
             
             # If tag does not exist, skip
@@ -381,11 +383,12 @@ async def update_content(
                 continue
             
             # Check the tag association
-            tag_association = ContentTag.fetch_one_by_field(
+            tag_association = TagAssociation.fetch_one_by_field(
                 db,
                 throw_error=False,
-                content_id=id,
-                tag_id=tag_id
+                entity_id=id,
+                tag_id=tag_id,
+                model_type='contents'
             )
             
             # If tag association exists, skip
@@ -393,10 +396,11 @@ async def update_content(
                 continue
             
             # Create content tag association
-            ContentTag.create(
+            TagAssociation.create(
                 db=db,
-                content_id=content.id,
-                tag_id=tag_id
+                entity_id=content.id,
+                tag_id=tag_id,
+                model_type='contents'
             )
 
     logger.info(f'Content {content.title} updated')

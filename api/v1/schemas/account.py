@@ -2,12 +2,12 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class SupplierBase(BaseModel):
+class AccountBase(BaseModel):
 
     unique_id: Optional[str] = None
 
 
-class UpdateSupplier(BaseModel):
+class UpdateAccount(BaseModel):
 
     unique_id: Optional[str] = None
 

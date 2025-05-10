@@ -24,12 +24,16 @@ async def create_price(
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
     """Endpoint to create a new price"""
+    
+    # Deactiveate all active product prices so as to have only one active price per product
+    if payload.is_active == True:
+        PriceService.deactivate_active_prices(db, payload.product_id)
 
     price = ProductPrice.create(
         db=db,
         **payload.model_dump(exclude_unset=True)
     )
-
+    
     return success_response(
         message=f"Price created successfully",
         status_code=200,
@@ -89,12 +93,17 @@ async def get_price_by_id(
 @price_router.patch("/{id}", status_code=200, response_model=success_response)
 async def update_price(
     id: str,
+    product_id: str,
     payload: price_schemas.UpdatePrice,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
     """Endpoint to update a price"""
 
+    # Deactiveate all active product prices so as to have only one active price per product
+    if payload.is_active and payload.is_active == True:
+        PriceService.deactivate_active_prices(db, product_id)
+        
     price = ProductPrice.update(
         db=db,
         id=id,

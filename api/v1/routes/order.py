@@ -6,39 +6,39 @@ from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.user import User
-from api.v1.models.supplier import Supplier
+from api.v1.models.order import Order
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
-from api.v1.services.supplier import SupplierService
-from api.v1.schemas import supplier as supplier_schemas
+from api.v1.services.order import OrderService
+from api.v1.schemas import order as order_schemas
 from api.utils.loggers import create_logger
 
 
-supplier_router = APIRouter(prefix='/suppliers', tags=['Supplier'])
+order_router = APIRouter(prefix='/orders', tags=['Order'])
 logger = create_logger(__name__)
 
-@supplier_router.post("", status_code=201, response_model=success_response)
-async def create_supplier(
-    payload: supplier_schemas.SupplierBase,
+@order_router.post("", status_code=201, response_model=success_response)
+async def create_order(
+    payload: order_schemas.OrderBase,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
-    """Endpoint to create a new supplier"""
+    """Endpoint to create a new order"""
 
-    supplier = Supplier.create(
+    order = Order.create(
         db=db,
         **payload.model_dump(exclude_unset=True)
     )
 
     return success_response(
-        message=f"Supplier created successfully",
-        status_code=200,
-        data=supplier.to_dict()
+        message=f"Order created successfully",
+        status_code=201,
+        data=order.to_dict()
     )
 
 
-@supplier_router.get("", status_code=200)
-async def get_suppliers(
+@order_router.get("", status_code=200)
+async def get_orders(
     search: str = None,
     page: int = 1,
     per_page: int = 10,
@@ -47,9 +47,9 @@ async def get_suppliers(
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
-    """Endpoint to get all suppliers"""
+    """Endpoint to get all orders"""
 
-    query, suppliers, count = Supplier.all(
+    query, orders, count = Order.all(
         db, 
         sort_by=sort_by,
         order=order.lower(),
@@ -61,66 +61,65 @@ async def get_suppliers(
     )
     
     return paginator.build_paginated_response(
-        items=[supplier.to_dict() for supplier in suppliers],
-        endpoint='/suppliers',
+        items=[order.to_dict() for order in orders],
+        endpoint='/orders',
         page=page,
         size=per_page,
         total=count,
     )
 
 
-@supplier_router.get("/{id}", status_code=200, response_model=success_response)
-async def get_supplier_by_id(
+@order_router.get("/{id}", status_code=200, response_model=success_response)
+async def get_order_by_id(
     id: str,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
-    """Endpoint to get a supplier by ID or unique_id in case ID fails."""
+    """Endpoint to get a order by ID or unique_id in case ID fails."""
 
-    supplier = Supplier.fetch_by_id(db, id)
+    order = Order.fetch_by_id(db, id)
     
     return success_response(
-        message=f"Fetched supplier successfully",
+        message=f"Fetched order successfully",
         status_code=200,
-        data=supplier.to_dict()
+        data=order.to_dict()
     )
 
 
-@supplier_router.patch("/{id}", status_code=200, response_model=success_response)
-async def update_supplier(
+@order_router.patch("/{id}", status_code=200, response_model=success_response)
+async def update_order(
     id: str,
-    payload: supplier_schemas.UpdateSupplier,
+    payload: order_schemas.UpdateOrder,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
-    """Endpoint to update a supplier"""
+    """Endpoint to update a order"""
 
-    supplier = Supplier.update(
+    order = Order.update(
         db=db,
         id=id,
         **payload.model_dump(exclude_unset=True)
     )
 
     return success_response(
-        message=f"Supplier updated successfully",
+        message=f"Order updated successfully",
         status_code=200,
-        data=supplier.to_dict()
+        data=order.to_dict()
     )
 
 
-@supplier_router.delete("/{id}", status_code=200, response_model=success_response)
-async def delete_supplier(
+@order_router.delete("/{id}", status_code=200, response_model=success_response)
+async def delete_order(
     id: str,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
-    """Endpoint to delete a supplier"""
+    """Endpoint to delete a order"""
 
-    Supplier.soft_delete(db, id)
+    Order.soft_delete(db, id)
 
     return success_response(
         message=f"Deleted successfully",
-        status_code=200,
-        data={"id": id}
+        status_code=200
     )
 
