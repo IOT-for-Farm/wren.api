@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from slugify import slugify
 from sqlalchemy.orm import Session
 
@@ -7,30 +7,33 @@ from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.user import User
-from api.v1.models.category import Category
+from api.v1.models.product import ProductVariant
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
-from api.v1.services.category import CategoryService
-from api.v1.schemas import category as category_schemas
+from api.v1.services.product import ProductService
+from api.v1.schemas import product as product_schemas
 from api.utils.loggers import create_logger
 
 
-category_router = APIRouter(prefix='/categories', tags=['Category'])
+product_variant_router = APIRouter(prefix='/product-variants', tags=['Product Variant'])
 logger = create_logger(__name__)
 
-@category_router.post("", status_code=201, response_model=success_response)
-async def create_category(
-    payload: category_schemas.CategoryBase,
+@product_variant_router.post("", status_code=201, response_model=success_response)
+async def create_product_variant(
+    payload: product_schemas.ProductVariantCreate,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
-    """Endpoint to create a new category"""
+    """Endpoint to create a new product variant"""
     
     AuthService.has_org_permission(
         db=db, entity=entity,
-        permission='category:create',
+        permission='product-variant:create',
         organization_id=payload.organization_id
     )
+    
+    if payload.attributes:
+        payload.attributes = helpers.format_additional_info_create(payload.attributes)
     
     if not payload.slug:
         payload.slug = slugify(payload.name)
@@ -41,26 +44,24 @@ async def create_category(
             organization_id=payload.organization_id,
         )
 
-    category = Category.create(
+    product_variant = ProductVariant.create(
         db=db,
         **payload.model_dump(exclude_unset=True)
     )
 
     return success_response(
-        message=f"Category created successfully",
-        status_code=200,
-        data=category.to_dict()
+        message=f"Product variant created successfully",
+        status_code=201,
+        data=product_variant.to_dict()
     )
 
 
-@category_router.get("", status_code=200)
-async def get_categories(
+@product_variant_router.get("", status_code=200)
+async def get_product_variants(
     organization_id: str,
-    unique_id: str = None,
     name: str = None,
     slug: str = None,
-    parent_id: str = None,
-    model_type: str = None,
+    product_id: str = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
@@ -68,7 +69,7 @@ async def get_categories(
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
-    """Endpoint to get all categories"""
+    """Endpoint to get all product variants"""
     
     AuthService.belongs_to_organization(
         entity=entity,
@@ -76,7 +77,7 @@ async def get_categories(
         db=db
     )
 
-    query, categories, count = Category.fetch_by_field(
+    query, product_variants, count = ProductVariant.fetch_by_field(
         db, 
         sort_by=sort_by,
         order=order.lower(),
@@ -84,100 +85,103 @@ async def get_categories(
         per_page=per_page,
         search_fields={
             'name': name,
-            'unique_id': unique_id,
         },
         organization_id=organization_id,
-        slug=slug,
-        parent_id=parent_id,
-        model_type=model_type,
+        product_id=product_id,
+        slug=slug
     )
     
     return paginator.build_paginated_response(
-        items=[category.to_dict() for category in categories],
-        endpoint='/categories',
+        items=[product_variant.to_dict() for product_variant in product_variants],
+        endpoint='/product-variants',
         page=page,
         size=per_page,
         total=count,
     )
 
 
-@category_router.get("/{id}", status_code=200, response_model=success_response)
-async def get_category_by_id(
+@product_variant_router.get("/{id}", status_code=200, response_model=success_response)
+async def get_product_variant_by_id(
     id: str,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
-    """Endpoint to get a category by ID or unique_id in case ID fails."""
+    """Endpoint to get a product variant by ID or unique_id in case ID fails."""
 
-    category = Category.fetch_by_id(db, id)
+    product_variant = ProductVariant.fetch_by_id(db, id)
     
     AuthService.belongs_to_organization(
         entity=entity,
-        organization_id=category.organization_id,
+        organization_id=product_variant.organization_id,
         db=db
     )
     
     return success_response(
-        message=f"Fetched category successfully",
+        message=f"Fetched product variant successfully",
         status_code=200,
-        data=category.to_dict()
+        data=product_variant.to_dict()
     )
 
 
-@category_router.patch("/{id}", status_code=200, response_model=success_response)
-async def update_category(
+@product_variant_router.patch("/{id}", status_code=200, response_model=success_response)
+async def update_product_variant(
     id: str,
     organization_id: str,
-    payload: category_schemas.UpdateCategory,
+    payload: product_schemas.ProductVariantUpdate,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
-    """Endpoint to update a category"""
-    
-    prev_category = Category.fetch_by_id(db, id)
+    """Endpoint to update a product variant"""
     
     AuthService.has_org_permission(
         db=db, entity=entity,
-        permission='category:update',
+        permission='product-variant:update',
         organization_id=organization_id
     )
-    
-    if payload.parent_id == prev_category.id:
-        raise HTTPException(400, 'Category cannot be its own parent')
 
-    category = Category.update(
+    product_variant = ProductVariant.update(
         db=db,
         id=id,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=['attributes', 'attributes_keys_to_remove'])
     )
+    
+    if payload.attributes:
+        product_variant.attributes = helpers.format_attributes_update(
+            attributes=payload.attributes,
+            model_instance=product_variant,
+            keys_to_remove=payload.attributes_keys_to_remove
+        )
+        
+    db.commit()
 
+    logger.info(f'Variant with {product_variant.id} updated')
+    
     return success_response(
-        message=f"Category updated successfully",
+        message=f"Product variant updated successfully",
         status_code=200,
-        data=category.to_dict()
+        data=product_variant.to_dict()
     )
 
 
-@category_router.delete("/{id}", status_code=200, response_model=success_response)
-async def delete_category(
+@product_variant_router.delete("/{id}", status_code=200, response_model=success_response)
+async def delete_product_variant(
     id: str,
     organization_id: str,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
-    """Endpoint to delete a category"""
+    """Endpoint to delete a product variant"""
     
     AuthService.has_org_permission(
         db=db, entity=entity,
-        permission='category:delete',
+        permission='product-variant:delete',
         organization_id=organization_id
     )
 
-    Category.soft_delete(db, id)
+    ProductVariant.soft_delete(db, id)
 
     return success_response(
         message=f"Deleted successfully",
-        status_code=200,
-        data={"id": id}
+        status_code=200
     )
 

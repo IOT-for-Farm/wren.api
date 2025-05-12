@@ -25,24 +25,18 @@ class Template(BaseTableModel):
     organization_id = sa.Column(sa.String(255), nullable=False, index=True)
     layout_id = sa.Column(sa.String, sa.ForeignKey("template_layouts.id"), default=None, index=True)
     feature = sa.Column(sa.String(191), nullable=True, index=True)  # should be nullable
-
-    # tags = relationship("Tag", secondary=email_template_tags, backref="email_templates")
-    # tags = relationship(
-    #     "Tag",
-    #     secondary='template_tags',
-    #     primaryjoin="and_(Template.id==TemplateTag.template_id, TemplateTag.is_deleted==False)",
-    #     secondaryjoin="and_(Tag.id==TemplateTag.tag_id, Tag.is_deleted==False)",
-    #     backref="templates",
-    #     lazy='selectin'
-    # )
     
     tags = relationship(
         "Tag",
         secondary='tag_association',
-        primaryjoin="and_(Template.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==templates, TagAssociation.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
+        primaryjoin="and_(Template.id==foreign(TagAssociation.entity_id), "
+                   "TagAssociation.model_type=='templates', "
+                   "TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==foreign(TagAssociation.tag_id), "
+                     "Tag.is_deleted==False)",
         backref="templates",
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
     layout = relationship(

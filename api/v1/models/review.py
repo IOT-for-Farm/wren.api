@@ -20,4 +20,3 @@ class Review(BaseTableModel):
     star_rating = sa.Column(sa.Integer, sa.CheckConstraint("star_rating <= 5"))
     is_published = sa.Column(sa.Boolean, server_default='false', index=True)
     published_at = sa.Column(sa.DateTime, default=None)
-    # overall_rating = sa.Column(sa.Float(20, 2))

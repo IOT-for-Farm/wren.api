@@ -43,7 +43,7 @@ class ProjectBase(BaseModel):
     start_date: Optional[datetime] = Form(default=datetime.now())
     end_date: Optional[datetime] = Form(None)
     status: Optional[ProjectStatus] = Form(ProjectStatus.not_started)
-    additional_info: Optional[List[AdditionalInfoSchema]] = None
+    # additional_info: Optional[List[AdditionalInfoSchema]] = None
     
     @field_validator("start_date")
     def validate_start_date(cls, v):
@@ -78,7 +78,7 @@ class ProjectUpdate(BaseModel):
     start_date: Optional[datetime] = Form(None)
     end_date: Optional[datetime] = Form(None)
     status: Optional[ProjectStatus] = Form(None)
-    additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
+    # additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
     
     @field_validator("start_date")
     def validate_start_date(cls, v):
@@ -114,7 +114,7 @@ class TaskBase(BaseModel):
     priority: Optional[Priority] = Form(Priority.medium)
     status: Optional[ProjectStatus] = Form(ProjectStatus.not_started)
     due_date: Optional[datetime] = Form(None)
-    additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
+    # additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
     
     @field_validator("due_date")
     def validate_due_date(cls, v):
@@ -127,7 +127,7 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    assignee_ids: Optional[List[str]] = Form(None)
+    assignee_ids: Optional[str] = Form(None)
 
 
 class TaskUpdate(BaseModel):
@@ -139,8 +139,8 @@ class TaskUpdate(BaseModel):
     priority: Optional[Priority] = Form(None)
     status: Optional[ProjectStatus] = Form(None)
     due_date: Optional[datetime] = Form(None)
-    assignee_ids: Optional[List[str]] = Form(None)
-    additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
+    assignee_ids: Optional[str] = Form(None)
+    # additional_info: Optional[List[AdditionalInfoSchema]] = Form(None)
     
     @field_validator("due_date")
     def validate_due_date(cls, v):

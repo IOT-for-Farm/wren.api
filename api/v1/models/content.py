@@ -49,27 +49,26 @@ class Content(BaseTableModel):
     organization = relationship("Organization", backref='organization_contents')
     author = relationship("User", backref='user_contents', lazy='selectin')
     versions = relationship("ContentVersion", back_populates="content", cascade="all, delete-orphan")
-    # tags = relationship(
-    #     "Tag",
-    #     secondary='content_tags',
-    #     primaryjoin="and_(Content.id==ContentTag.content_id, ContentTag.is_deleted==False)",
-    #     secondaryjoin="and_(Tag.id==ContentTag.tag_id, Tag.is_deleted==False)",
-    #     backref="contents",
-    #     lazy='selectin'
-    # )
+    
     tags = relationship(
         "Tag",
         secondary='tag_association',
-        primaryjoin="and_(Content.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==contents, TagAssociation.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
+        primaryjoin="and_(Content.id==foreign(TagAssociation.entity_id), "
+                   "TagAssociation.model_type=='contents', "
+                   "TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==foreign(TagAssociation.tag_id), "
+                     "Tag.is_deleted==False)",
         backref="contents",
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
+    
     attachments = relationship(
         'File',
         primaryjoin='and_(Content.id==foreign(File.model_id), File.is_deleted==False)',
         lazy='selectin',
-        backref='contents'
+        backref='contents',
+        viewonly=True
     )
     # analytics = relationship(
     #     "ContentAnalytics", 

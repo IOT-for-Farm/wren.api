@@ -98,9 +98,8 @@ async def create_project(
             organization_id=payload.organization_id if not payload.department_id else department.organization_id,
         )
         
-    if payload.additional_info:
-        payload.additional_info = helpers.format_additional_info_create(payload.additional_info)
-        print(payload.additional_info)
+    # if payload.additional_info:
+    #     payload.additional_info = helpers.format_additional_info_create(payload.additional_info)
     
     payload.status = payload.status.value
     
@@ -280,12 +279,13 @@ async def update_project(
         **payload.model_dump(exclude_unset=True, exclude=['project_image', 'attachments', 'additional_info'])
     )
     
-    if payload.additional_info:
-        project.additional_info = helpers.format_additional_info_update(
-            additional_info=payload.additional_info,
-            model_instance=project
-        )
-        db.commit()
+    # if payload.additional_info:
+    #     project.additional_info = helpers.format_additional_info_update(
+    #         additional_info=payload.additional_info,
+    #         model_instance=project,
+    #         keys_to_remove=payload.additional_info_keys_to_reomve
+    #     )
+    #     db.commit()
 
     return success_response(
         message=f"Project updated successfully",
@@ -474,9 +474,9 @@ async def create_task(
             organization_id=project.organization_id if not project.department_id else department.organization_id,
         )
         
-    if payload.additional_info:
-        payload.additional_info = helpers.format_additional_info_create(payload.additional_info)
-        print(payload.additional_info)
+    # if payload.additional_info:
+    #     payload.additional_info = helpers.format_additional_info_create(payload.additional_info)
+    #     print(payload.additional_info)
     
     payload.status = payload.status.value
     
@@ -509,7 +509,7 @@ async def create_task(
         project_members = project.members
         project_member_user_ids = [member.id for member in project_members]
         
-        for user_id in payload.assignee_ids:
+        for user_id in [assignee.strip() for assignee in payload.assignee_ids.split(',')]:
             if (user_id in project_member_user_ids) or (user_id not in project_member_user_ids):
                 continue
             
@@ -699,19 +699,19 @@ async def update_task(
         **payload.model_dump(exclude_unset=True, exclude=['attachments', 'assignee_ids', 'additional_info'])
     )
     
-    if payload.additional_info:
-        task.additional_info = helpers.format_additional_info_update(
-            additional_info=payload.additional_info,
-            model_instance=task
-        )  
-        db.commit()
+    # if payload.additional_info:
+    #     task.additional_info = helpers.format_additional_info_update(
+    #         additional_info=payload.additional_info,
+    #         model_instance=task
+    #     )  
+    #     db.commit()
     
     if payload.assignee_ids:
         # check if users belong in project
         project_members = project.members
         project_member_user_ids = [member.id for member in project_members]
         
-        for user_id in payload.assignee_ids:
+        for user_id in [assignee.strip() for assignee in payload.assignee_ids.split(',')]:
             if (user_id in project_member_user_ids) or (user_id not in project_member_user_ids):
                 continue
             

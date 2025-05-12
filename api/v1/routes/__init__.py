@@ -27,6 +27,8 @@ from api.v1.routes.order import order_router
 from api.v1.routes.sale import sale_router
 from api.v1.routes.account import account_router
 from api.v1.routes.payment import payment_router
+from api.v1.routes.price import price_router
+from api.v1.routes.product_variant import product_variant_router
 
 v1_router = APIRouter(prefix='/api/v1')
 
@@ -40,6 +42,8 @@ v1_router.include_router(content_router)
 v1_router.include_router(content_template_router)
 v1_router.include_router(project_router)
 v1_router.include_router(product_router)
+v1_router.include_router(product_variant_router)
+v1_router.include_router(price_router)
 v1_router.include_router(customer_router)
 v1_router.include_router(vendor_router)
 v1_router.include_router(inventory_router)

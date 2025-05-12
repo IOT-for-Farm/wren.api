@@ -32,13 +32,15 @@ class Organization(BaseTableModel):
         'ContactInfo', 
         primaryjoin="and_(Organization.id == foreign(ContactInfo.model_id), ContactInfo.is_deleted == False)",
         backref="organization_contact_infos",
-        lazy="selectin"
+        lazy="selectin",
+        viewonly=True
     )
     locations = relationship(
         'Location', 
         primaryjoin="and_(Organization.id == foreign(Location.model_id), Location.is_deleted == False)",
         backref="organization_locations",
-        lazy="selectin"
+        lazy="selectin",
+        viewonly=True
     )
     roles = relationship(
         "OrganizationRole", 
@@ -89,7 +91,7 @@ class OrganizationRole(BaseTableModel):
     permissions = sa.Column(sa.JSON)  # Flexible storage for permissions
     
     # Relationships
-    # organization = relationship("Organization", backref="org_roles", lazy="selectin")
+    # organization = relationship("Organization", backref="org_roles")
     # members = relationship("OrganizationMember", back_populates="role")
 
 

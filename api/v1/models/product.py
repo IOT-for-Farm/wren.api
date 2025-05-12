@@ -43,7 +43,8 @@ class Product(BaseTableModel):
         'File',
         backref='product_photos',
         primaryjoin='and_(Product.id == foreign(File.model_id), File.is_deleted == False, Product.organization_id==File.organization_id)',
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
     # parent = relationship(
@@ -60,28 +61,27 @@ class Product(BaseTableModel):
     categories = relationship(
         'Category',
         secondary='category_association',
-        primaryjoin='and_(CategoryAssociation.entity_id==Product.id, CategoryAssociation.is_deleted==False, CategoryAssociation.model_type==products)',
-        secondaryjoin='and_(Category.id==CategoryAssociation.category_id, Category.is_deleted==False)',
+        primaryjoin='and_(foreign(CategoryAssociation.entity_id)==Product.id, '
+                   'CategoryAssociation.is_deleted==False, '
+                   'CategoryAssociation.model_type=="products")',
+        secondaryjoin='and_(Category.id==foreign(CategoryAssociation.category_id), '
+                     'Category.is_deleted==False)',
         lazy='selectin',
-        backref='categories'
+        backref='products',
+        viewonly=True
     )
-    
-    # tags = relationship(
-    #     "Tag",
-    #     secondary='product_tags',
-    #     primaryjoin="and_(Product.id==ProductTag.template_id, ProductTag.is_deleted==False)",
-    #     secondaryjoin="and_(Tag.id==ProductTag.tag_id, Tag.is_deleted==False)",
-    #     backref="products",
-    #     lazy='selectin'
-    # )
     
     tags = relationship(
         "Tag",
         secondary='tag_association',
-        primaryjoin="and_(Product.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==products, TagAssociation.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
+        primaryjoin="and_(Product.id==foreign(TagAssociation.entity_id), "
+                   "TagAssociation.model_type=='products', "
+                   "TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==foreign(TagAssociation.tag_id), "
+                     "Tag.is_deleted==False)",
         backref="products",
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
     price = relationship(
@@ -89,7 +89,8 @@ class Product(BaseTableModel):
         backref='products',
         uselist=False,
         primaryjoin='and_(ProductPrice.product_id==Product.id, ProductPrice.is_active==True)',
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
 
@@ -108,7 +109,8 @@ class ProductVariant(BaseTableModel):
         'File',
         backref='product_variant_photos',
         primaryjoin='and_(ProductVariant.id == foreign(File.model_id), File.is_deleted == False, ProductVariant.organization_id==File.organization_id)',
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
 

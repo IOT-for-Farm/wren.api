@@ -87,7 +87,7 @@ async def get_${file_name}s(
 ):
     """Endpoint to get all ${file_name}s"""
 
-    query, ${file_name}s, count = ${file_name^}.all(
+    query, ${file_name}s, count = ${file_name^}.fetch_by_field(
         db, 
         sort_by=sort_by,
         order=order.lower(),

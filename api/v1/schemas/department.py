@@ -27,6 +27,7 @@ class UpdateDepartment(BaseModel):
     name: Optional[str] = None
     parent_id: Optional[str] = None
     additional_info: Optional[List[AdditionalInfoSchema]] = None
+    additional_info_keys_to_remove: Optional[List[str]] = None
     
     @field_validator('parent_id')
     def validate_parent_id(cls, v, values):

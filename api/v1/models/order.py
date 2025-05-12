@@ -39,7 +39,7 @@ class Order(BaseTableModel):
         
         total = 0.00
         for item in self.items:
-            total += item.product.price.selling_price
+            total += item.product.price.selling_price if self.product.prise else 0.00
         
         return total
     

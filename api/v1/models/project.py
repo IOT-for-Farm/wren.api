@@ -27,7 +27,6 @@ class Project(BaseTableModel):
         backref='created_projects', 
         uselist=False, 
         lazy='selectin',
-        
     )
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
     milestones = relationship("Milestone", back_populates="project", cascade="all, delete-orphan")
@@ -43,7 +42,8 @@ class Project(BaseTableModel):
         'File',
         primaryjoin='and_(Project.id==foreign(File.model_id), File.is_deleted==False)',
         lazy='selectin',
-        backref='projects'
+        backref='projects',
+        viewonly=True
     )
 
 
@@ -86,7 +86,8 @@ class Task(BaseTableModel):
         'File',
         primaryjoin='and_(Task.id==foreign(File.model_id), File.is_deleted==False)',
         lazy='selectin',
-        backref='tasks'
+        backref='tasks',
+        viewonly=True
     )
 
 

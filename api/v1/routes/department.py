@@ -37,7 +37,6 @@ async def create_department(
     )
 
     if payload.additional_info:
-        # payload.additional_info = {info.key: info.value for info in payload.additional_info}
         payload.additional_info = helpers.format_additional_info_create(payload.additional_info)
         print(payload.additional_info)
     
@@ -178,7 +177,8 @@ async def update_department(
     if payload.additional_info:
         department.additional_info = helpers.format_additional_info_update(
             additional_info=payload.additional_info,
-            model_instance=department
+            model_instance=department,
+            keys_to_remove=payload.additional_info_keys_to_remove
         )
         
     db.commit()

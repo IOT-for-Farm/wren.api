@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from pydantic import BaseModel
 
 from api.v1.models import *
@@ -21,8 +21,7 @@ from api.v1.models import *
 
 class AdditionalInfoSchema(BaseModel):
     key: str
-    value: Any
-    
+    value: Any    
     
 class DeleteMultiple(BaseModel):
     ids: List[str]

@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
 
 class VendorType(str, Enum):
@@ -15,8 +15,17 @@ class VendorBase(BaseModel):
     unique_id: Optional[str] = None
 
 
+class VendorCreate(VendorBase):
+    
+    organization_id: str
+    category_ids: Optional[List[str]] = None
+    tag_ids: Optional[List[str]] = None
+
+
 class UpdateVendor(BaseModel):
 
     unique_id: Optional[str] = None
+    category_ids: Optional[List[str]] = None
+    tag_ids: Optional[List[str]] = None
 
 

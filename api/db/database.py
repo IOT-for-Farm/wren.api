@@ -2,6 +2,7 @@
 """
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy import create_engine
+from contextlib import contextmanager
 
 from api.utils.settings import settings, BASE_DIR
 
@@ -49,6 +50,15 @@ def create_database():
 
 
 def get_db():
+    db = db_session()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@contextmanager
+def get_db_with_ctx_manager():
     db = db_session()
     try:
         yield db

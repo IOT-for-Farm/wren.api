@@ -19,7 +19,8 @@ async def send_email(
     html_template_string: Optional[str]=None, 
     attachments: Optional[List[str]]=None,
     template_data: Optional[dict] = {},
-    apply_default_template_data: bool = True
+    apply_default_template_data: bool = True,
+    add_pdf_attachment: bool = False
 ):
     # from premailer import transform
 
@@ -108,7 +109,6 @@ async def send_email(
                     subtype=MessageType.html
                 )
             
-        
         logger.info('Message schema set up')
         
         fm = FastMail(conf)

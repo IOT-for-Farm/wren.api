@@ -38,25 +38,21 @@ class Vendor(BusinessPartner):
         'BusinessPartner',
         lazy='selectin',
         backref='vendor',
-        uselist=False
+        uselist=False,
+        viewonly=True
     )
-    
-    # tags = relationship(
-    #     "Tag",
-    #     secondary='vendor_tags',
-    #     primaryjoin="and_(Vendor.id==VendorTag.vendor_id, VendorTag.is_deleted==False)",
-    #     secondaryjoin="and_(Tag.id==VendorTag.tag_id, Tag.is_deleted==False)",
-    #     backref="vendors",
-    #     lazy='selectin'
-    # )
     
     tags = relationship(
         "Tag",
         secondary='tag_association',
-        primaryjoin="and_(Vendor.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==vendors, TagAssociation.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
+        primaryjoin="and_(Vendor.id==foreign(TagAssociation.entity_id), "
+                   "TagAssociation.model_type=='vendors', "
+                   "TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==foreign(TagAssociation.tag_id), "
+                     "Tag.is_deleted==False)",
         backref="vendors",
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
     photos = relationship(
@@ -64,16 +60,21 @@ class Vendor(BusinessPartner):
         backref='vendor_photos',
         # primaryjoin='and_(Vendor.id == foreign(File.model_id), File.is_deleted == False, Vendor.organization_id==File.organization_id)',
         primaryjoin='and_(Vendor.id == foreign(File.model_id), File.is_deleted == False)',
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
     categories = relationship(
         'Category',
         secondary='category_association',
-        primaryjoin='and_(CategoryAssociation.product_id==Vendor.id, CategoryAssociation.is_deleted==False, CategoryAssociation.model_type==vendors)',
-        secondaryjoin='and_(Category.id==CategoryAssociation.category_id, Category.is_deleted==False)',
+        primaryjoin='and_(foreign(CategoryAssociation.entity_id)==Vendor.id, '
+                   'CategoryAssociation.is_deleted==False, '
+                   'CategoryAssociation.model_type=="vendors")',
+        secondaryjoin='and_(Category.id==foreign(CategoryAssociation.category_id), '
+                     'Category.is_deleted==False)',
         lazy='selectin',
-        backref='vendors'
+        backref='vendors',
+        viewonly=True
     )
     
     accounts = relationship(
@@ -81,4 +82,5 @@ class Vendor(BusinessPartner):
         primaryjoin='and_(Vendor.id==foreign(Account.owner_id), Account.is_deleted==False)',
         backref='vendor_accounts',
         lazy='selectin',
+        viewonly=True
     )

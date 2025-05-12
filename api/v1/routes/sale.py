@@ -12,6 +12,7 @@ from api.v1.schemas.auth import AuthenticatedEntity
 from api.v1.services.sale import SaleService
 from api.v1.schemas import sale as sale_schemas
 from api.utils.loggers import create_logger
+from api.v1.services.tag import TagService
 
 
 sale_router = APIRouter(prefix='/sales', tags=['Sale'])
@@ -19,17 +20,34 @@ logger = create_logger(__name__)
 
 @sale_router.post("", status_code=201, response_model=success_response)
 async def create_sale(
-    payload: sale_schemas.SaleBase,
+    payload: sale_schemas.SaleCreate,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
     """Endpoint to create a new sale"""
+    
+    if not payload.unique_id:
+        payload.unique_id = helpers.generate_unique_id(
+            db=db, 
+            organization_id=payload.organization_id,
+        )
 
     sale = Sale.create(
         db=db,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=['tag_ids'])
     )
+    
+    if payload.tag_ids:
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=payload.organization_id,
+            model_type='sales',
+            entity_id=sale.id
+        )
 
+    logger.info(f'Sale with {sale.id} created')
+    
     return success_response(
         message=f"Sale created successfully",
         status_code=200,
@@ -39,7 +57,7 @@ async def create_sale(
 
 @sale_router.get("", status_code=200)
 async def get_sales(
-    search: str = None,
+    unique_id: str = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
@@ -56,7 +74,7 @@ async def get_sales(
         page=page,
         per_page=per_page,
         search_fields={
-            # 'email': search,
+            'unique_id': unique_id,
         },
     )
     
@@ -89,6 +107,7 @@ async def get_sale_by_id(
 @sale_router.patch("/{id}", status_code=200, response_model=success_response)
 async def update_sale(
     id: str,
+    organization_id: str,
     payload: sale_schemas.UpdateSale,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
@@ -98,8 +117,19 @@ async def update_sale(
     sale = Sale.update(
         db=db,
         id=id,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=['tag_ids'])
     )
+    
+    if payload.tag_ids:
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=organization_id,
+            model_type='sales',
+            entity_id=sale.id
+        )
+
+    logger.info(f'Sale with {sale.id} updated')
 
     return success_response(
         message=f"Sale updated successfully",

@@ -43,12 +43,14 @@ class BusinessPartner(BaseTableModel):
         'ContactInfo', 
         primaryjoin="and_(BusinessPartner.id == foreign(ContactInfo.model_id), ContactInfo.is_deleted == False)",
         backref="business_partner_contact_infos",
-        lazy="selectin"
+        lazy="selectin",
+        viewonly=True
     )
     
     locations = relationship(
         'Location', 
         primaryjoin="and_(BusinessPartner.id == foreign(Location.model_id), Location.is_deleted == False)",
         backref="business_partner_locations",
-        lazy="selectin"
+        lazy="selectin",
+        viewonly=True
     )

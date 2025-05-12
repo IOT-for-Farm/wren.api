@@ -17,6 +17,7 @@ from api.v1.services.form import FormService
 from api.v1.schemas import form as form_schemas
 from api.utils.loggers import create_logger
 from api.v1.services.organization import OrganizationService
+from api.v1.services.tag import TagService
 from config import config
 
 
@@ -234,27 +235,13 @@ async def create_form_template(
     )
     
     if payload.tag_ids:
-        for tag_id in payload.tag_ids:
-            # Check that tags exist in the organization
-            tag = Tag.fetch_one_by_field(
-                db, 
-                throw_error=False,
-                id=tag_id, 
-                organization_id=payload.organization_id,
-                model_type='form_templates'
-            )
-            
-            # If tag does not exist, skip
-            if not tag:
-                continue
-            
-            # Create template tag association
-            TagAssociation.create(
-                db=db,
-                entity_id=form_template.id,
-                tag_id=tag_id,
-                model_type='form_templates'
-            )
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=payload.organization_id,
+            model_type='form_templates',
+            entity_id=form_template.id
+        )
 
     logger.info(f"Form template created with id {form_template.id} and name {form_template.template_name}")
     
@@ -363,39 +350,13 @@ async def update_form_template(
     )
     
     if payload.tag_ids:
-        for tag_id in payload.tag_ids:
-            # Check that tags exist in the organization
-            tag = Tag.fetch_one_by_field(
-                db, 
-                throw_error=False,
-                id=tag_id, 
-                organization_id=form_template.organization_id,
-                model_type='form_templates'
-            )
-            
-            # If tag does not exist, skip
-            if not tag:
-                continue
-            
-            # Check the tag association
-            tag_association = TagAssociation.fetch_one_by_field(
-                db,
-                throw_error=False,
-                entity_id=id,
-                tag_id=tag_id,
-                model_type='form_templates'
-            )
-            
-            # If tag association exists, skip
-            if tag_association:
-                continue
-            
-            TagAssociation.create(
-                db=db,
-                entity_id=id,
-                tag_id=tag_id,
-                model_type='form_templates'
-            )
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=form_template.organization_id,
+            model_type='form_templates',
+            entity_id=form_template.id
+        )
 
     logger.info(f"Form template updated with ID: {form_template.id}")
     

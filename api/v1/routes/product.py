@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from slugify import slugify
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -9,9 +10,11 @@ from api.v1.models.user import User
 from api.v1.models.product import Product
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
+from api.v1.services.category import CategoryService
 from api.v1.services.product import ProductService
 from api.v1.schemas import product as product_schemas
 from api.utils.loggers import create_logger
+from api.v1.services.tag import TagService
 
 
 product_router = APIRouter(prefix='/products', tags=['Product'])
@@ -19,17 +22,62 @@ logger = create_logger(__name__)
 
 @product_router.post("", status_code=201, response_model=success_response)
 async def create_product(
-    payload: product_schemas.ProductBase,
+    payload: product_schemas.ProductCreate,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to create a new product"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='product:create',
+        organization_id=payload.organization_id
+    )
+    
+    if not payload.slug:
+        payload.slug = slugify(payload.name)
+        
+    if not payload.unique_id:
+        payload.unique_id = helpers.generate_unique_id(
+            db=db, 
+            organization_id=payload.organization_id,
+        )
+    
+    if payload.additional_info:
+        payload.additional_info = helpers.format_additional_info_create(payload.additional_info)
+        
+    if payload.attributes:
+        payload.attributes = helpers.format_additional_info_create(payload.attributes)
+        
+    payload.status = payload.status.value
+    payload.type = payload.type.value
 
     product = Product.create(
         db=db,
-        **payload.model_dump(exclude_unset=True)
+        creator_id=entity.entity.id if entity.type == 'user' else None,
+        **payload.model_dump(exclude_unset=True, exclude=['category_ids', 'tag_ids'])
     )
+    
+    if payload.tag_ids:
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=payload.organization_id,
+            model_type='products',
+            entity_id=product.id
+        )
+        
+    if payload.category_ids:
+        CategoryService.create_category_association(
+            db=db,
+            category_ids=payload.category_ids,
+            organization_id=payload.organization_id,
+            model_type='products',
+            entity_id=product.id
+        )
 
+    logger.info(f'Product with {product.id} created')
+    
     return success_response(
         message=f"Product created successfully",
         status_code=200,
@@ -39,25 +87,43 @@ async def create_product(
 
 @product_router.get("", status_code=200)
 async def get_products(
-    search: str = None,
+    organization_id: str,
+    unique_id: str = None,
+    name: str = None,
+    slug: str = None,
+    status: str = None,
+    type: str = None,
+    is_available: bool = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
     order: str = 'desc',
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get all products"""
+    
+    AuthService.belongs_to_organization(
+        entity=entity,
+        organization_id=organization_id,
+        db=db
+    )
 
-    query, products, count = Product.all(
+    query, products, count = Product.fetch_by_field(
         db, 
         sort_by=sort_by,
         order=order.lower(),
         page=page,
         per_page=per_page,
         search_fields={
-            # 'email': search,
+            'name': name,
+            'unique_id': unique_id,
         },
+        organization_id=organization_id,
+        slug=slug,
+        status=status,
+        type=type,
+        is_available=is_available,
     )
     
     return paginator.build_paginated_response(
@@ -73,11 +139,17 @@ async def get_products(
 async def get_product_by_id(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get a product by ID or unique_id in case ID fails."""
 
     product = Product.fetch_by_id(db, id)
+    
+    AuthService.belongs_to_organization(
+        entity=entity,
+        organization_id=product.organization_id,
+        db=db
+    )
     
     return success_response(
         message=f"Fetched product successfully",
@@ -89,18 +161,71 @@ async def get_product_by_id(
 @product_router.patch("/{id}", status_code=200, response_model=success_response)
 async def update_product(
     id: str,
-    payload: product_schemas.UpdateProduct,
+    organization_id: str,
+    payload: product_schemas.ProductUpdate,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to update a product"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='product:update',
+        organization_id=organization_id
+    )
+    
+    if payload.status:
+        payload.status = payload.status.value
+    
+    if payload.type:
+        payload.type = payload.type.value
 
     product = Product.update(
         db=db,
         id=id,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=[
+            'category_ids', 'tag_ids', 
+            'additional_info', 'attributes',
+            'additional_info_keys_to_remove', 'attributes_keys_to_remove'
+        ])
     )
+    
+    if payload.additional_info:
+        product.additional_info = helpers.format_additional_info_update(
+            additional_info=payload.additional_info,
+            model_instance=product,
+            keys_to_remove=payload.additional_info_keys_to_remove
+        )
+        
+    if payload.attributes:
+        product.attributes = helpers.format_attributes_update(
+            attributes=payload.attributes,
+            model_instance=product,
+            keys_to_remove=payload.attributes_keys_to_remove
+        )
+        
+    db.commit()
+    
+    if payload.tag_ids:
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=organization_id,
+            model_type='products',
+            entity_id=product.id
+        )
+        
+    if payload.category_ids:
+        CategoryService.create_category_association(
+            db=db,
+            category_ids=payload.category_ids,
+            organization_id=organization_id,
+            model_type='products',
+            entity_id=product.id
+        )
 
+    logger.info(f'Product with {product.id} updated')
+    
     return success_response(
         message=f"Product updated successfully",
         status_code=200,
@@ -111,16 +236,22 @@ async def update_product(
 @product_router.delete("/{id}", status_code=200, response_model=success_response)
 async def delete_product(
     id: str,
+    organization_id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to delete a product"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='product:delete',
+        organization_id=organization_id
+    )
 
     Product.soft_delete(db, id)
 
     return success_response(
         message=f"Deleted successfully",
         status_code=200,
-        data={"id": id}
     )
 

@@ -21,6 +21,7 @@ from api.v1.services.content import ContentService
 from api.v1.schemas import content as content_schemas
 from api.utils.loggers import create_logger
 from api.v1.services.file import FileService
+from api.v1.services.tag import TagService
 from config import config
 
 
@@ -112,27 +113,14 @@ async def create_content(
     
     if payload.tag_ids:
         tag_ids = payload.tag_ids.split(',')
-        for tag_id in tag_ids:
-            # Check that tags exist in the organization
-            tag = Tag.fetch_one_by_field(
-                db, 
-                throw_error=False,
-                id=tag_id, 
-                organization_id=payload.organization_id,
-                model_type='contents'
-            )
-            
-            # If tag does not exist, skip
-            if not tag:
-                continue
-            
-            # Create template tag association
-            TagAssociation.create(
-                db=db,
-                entity_id=content.id,
-                tag_id=tag_id,
-                model_type='contents'
-            )
+        
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=tag_ids,
+            organization_id=payload.organization_id,
+            model_type='contents',
+            entity_id=content.id
+        )
     
     logger.info(f'New content created with name {content.title}')
     
@@ -335,7 +323,6 @@ async def update_content(
     if payload.content_type:
         payload.content_type = payload.content_type if isinstance(payload.content_type, str) else payload.content_type.value
         
-        
     # Create new content version
     ContentVersion.create(
         db=db,
@@ -368,40 +355,14 @@ async def update_content(
     
     if payload.tag_ids:
         tag_ids = payload.tag_ids.split(',')
-        for tag_id in tag_ids:
-            # Check that tags exist in the organization
-            tag = Tag.fetch_one_by_field(
-                db, 
-                throw_error=False,
-                id=tag_id, 
-                organization_id=organization_id,
-                model_type='contents'
-            )
             
-            # If tag does not exist, skip
-            if not tag:
-                continue
-            
-            # Check the tag association
-            tag_association = TagAssociation.fetch_one_by_field(
-                db,
-                throw_error=False,
-                entity_id=id,
-                tag_id=tag_id,
-                model_type='contents'
-            )
-            
-            # If tag association exists, skip
-            if tag_association:
-                continue
-            
-            # Create content tag association
-            TagAssociation.create(
-                db=db,
-                entity_id=content.id,
-                tag_id=tag_id,
-                model_type='contents'
-            )
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=tag_ids,
+            organization_id=organization_id,
+            model_type='contents',
+            entity_id=content.id
+        )
 
     logger.info(f'Content {content.title} updated')
     

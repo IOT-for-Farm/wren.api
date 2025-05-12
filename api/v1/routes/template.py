@@ -15,6 +15,7 @@ from api.v1.models.tag import Tag, TagAssociation
 from api.v1.models.template import Template
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
+from api.v1.services.tag import TagService
 from api.v1.services.template import TemplateService
 from api.v1.schemas import template as template_schemas
 from api.utils.loggers import create_logger
@@ -56,27 +57,13 @@ async def create_template(
     )
 
     if payload.tag_ids:
-        for tag_id in payload.tag_ids:
-            # Check that tags exist in the organization
-            tag = Tag.fetch_one_by_field(
-                db, 
-                throw_error=False,
-                id=tag_id, 
-                organization_id=payload.organization_id,
-                model_type='templates'
-            )
-            
-            # If tag does not exist, skip
-            if not tag:
-                continue
-            
-            # Create template tag association
-            TagAssociation.create(
-                db=db,
-                entity_id=template.id,
-                tag_id=tag_id,
-                model_type='templates'
-            )
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=payload.organization_id,
+            model_type='templates',
+            entity_id=template.id
+        )
     
     logger.info(f"Template created with ID: {template.id}")
       
@@ -119,7 +106,6 @@ async def get_templates(
         search_fields={
             'name': name,
         },
-        # organization_id=organization_id,
         feature=feature,
         is_active=is_active,
         layout_id=layout_id
@@ -207,46 +193,13 @@ async def update_template(
     )
         
     if payload.tag_ids:
-        for tag_id in payload.tag_ids:
-            # Check that tags exist in the organization
-            tag = Tag.fetch_one_by_field(
-                db, 
-                throw_error=False,
-                id=tag_id, 
-                model_type='templates',
-                organization_id=organization_id
-            )
-            
-            # If tag does not exist, skip
-            if not tag:
-                continue
-            
-            # Check the tag association
-            # tag_association = TemplateTag.fetch_one_by_field(
-            #     db,
-            #     throw_error=False,
-            #     template_id=id,
-            #     tag_id=tag_id
-            # )
-            tag_association = TagAssociation.fetch_one_by_field(
-                db,
-                throw_error=False,
-                entity_id=id,
-                model_type='templates',
-                tag_id=tag_id,
-            )
-            
-            # If tag association exists, skip
-            if tag_association:
-                continue
-            
-            # Create template tag association
-            TagAssociation.create(
-                db=db,
-                entity_id=template.id,
-                tag_id=tag_id,
-                model_type='templates'
-            )
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=organization_id,
+            model_type='templates',
+            entity_id=template.id
+        )
 
     logger.info(f"Template updated with ID: {template.id}")
     

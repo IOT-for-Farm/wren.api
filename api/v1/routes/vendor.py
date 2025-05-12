@@ -9,6 +9,8 @@ from api.v1.models.user import User
 from api.v1.models.vendor import Vendor
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
+from api.v1.services.category import CategoryService
+from api.v1.services.tag import TagService
 from api.v1.services.vendor import VendorService
 from api.v1.schemas import vendor as vendor_schemas
 from api.utils.loggers import create_logger
@@ -19,7 +21,7 @@ logger = create_logger(__name__)
 
 @vendor_router.post("", status_code=201, response_model=success_response)
 async def create_vendor(
-    payload: vendor_schemas.VendorBase,
+    payload: vendor_schemas.VendorCreate,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
 ):
@@ -27,8 +29,26 @@ async def create_vendor(
 
     vendor = Vendor.create(
         db=db,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=['tag_ids', 'category_ids'])
     )
+    
+    if payload.tag_ids:
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=payload.organization_id,
+            model_type='vendors',
+            entity_id=vendor.id
+        )
+        
+    if payload.category_ids:
+        CategoryService.create_category_association(
+            db=db,
+            category_ids=payload.category_ids,
+            organization_id=payload.organization_id,
+            model_type='vendors',
+            entity_id=vendor.id
+        )
 
     return success_response(
         message=f"Vendor created successfully",
@@ -89,6 +109,7 @@ async def get_vendor_by_id(
 @vendor_router.patch("/{id}", status_code=200, response_model=success_response)
 async def update_vendor(
     id: str,
+    organization_id: str,
     payload: vendor_schemas.UpdateVendor,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
@@ -98,8 +119,26 @@ async def update_vendor(
     vendor = Vendor.update(
         db=db,
         id=id,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=['tag_ids', 'category_ids'])
     )
+    
+    if payload.tag_ids:
+        TagService.create_tag_association(
+            db=db,
+            tag_ids=payload.tag_ids,
+            organization_id=organization_id,
+            model_type='vendors',
+            entity_id=vendor.id
+        )
+        
+    if payload.category_ids:
+        CategoryService.create_category_association(
+            db=db,
+            category_ids=payload.category_ids,
+            organization_id=organization_id,
+            model_type='vendors',
+            entity_id=vendor.id
+        )
 
     return success_response(
         message=f"Vendor updated successfully",

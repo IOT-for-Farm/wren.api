@@ -26,10 +26,14 @@ class Sale(BaseTableModel):
     tags = relationship(
         "Tag",
         secondary='tag_association',
-        primaryjoin="and_(Sale.id==foreign(TagAssociation.entity_id), TagAssociation.model_type==sales, TagAssociation.is_deleted==False)",
-        secondaryjoin="and_(Tag.id==TagAssociation.tag_id, Tag.is_deleted==False)",
+        primaryjoin="and_(Sale.id==foreign(TagAssociation.entity_id), "
+                   "TagAssociation.model_type=='sales', "
+                   "TagAssociation.is_deleted==False)",
+        secondaryjoin="and_(Tag.id==foreign(TagAssociation.tag_id), "
+                     "Tag.is_deleted==False)",
         backref="sales",
-        lazy='selectin'
+        lazy='selectin',
+        viewonly=True
     )
     
     vendor = relationship(
@@ -64,12 +68,12 @@ class Sale(BaseTableModel):
     def total_price(self):
         '''Get total price of sale'''
             
-        product_price = self.product.price.selling_price
+        product_price = self.product.price.selling_price if self.product.prise else 0.00
         return self.quantity * product_price
     
     @hybrid_property
     def profit(self):
         '''Get profit on sale'''
         
-        profit_on_single_product = self.product.price.selling_price - self.product.price.cost_price
+        profit_on_single_product = (self.product.price.selling_price - self.product.price.cost_price) if self.product.prise else 0.00
         return profit_on_single_product * self.quantity

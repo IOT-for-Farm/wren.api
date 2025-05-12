@@ -3,6 +3,8 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session, class_mapper
 from uuid import uuid4
 from fastapi import HTTPException
+from sqlalchemy.ext.hybrid import hybrid_property
+from inspect import getmembers
 
 from api.db.database import Base
 
@@ -32,13 +34,11 @@ class BaseTableModel(Base):
         if self.updated_at:
             obj_dict["updated_at"] = self.updated_at.isoformat()
             
-        # for relation in class_mapper(self.__class__).relationships:
-        #     rel_obj = getattr(self, relation.key)
-        #     if rel_obj is not None and relation.uselist is False:  # One-to-one
-        #         obj_dict[relation.key] = rel_obj.to_dict() if hasattr(rel_obj, "to_dict") else str(rel_obj)
-        #     elif rel_obj is not None:  # One-to-many
-        #         obj_dict[relation.key] = [item.to_dict() if hasattr(item, "to_dict") else str(item) for item in rel_obj]
-        
+        # Get hybrid properties
+        for name, attr in getmembers(type(self)):
+            if isinstance(attr, hybrid_property):
+                obj_dict[name] = getattr(self, name)
+                
         # Exclude specified fields
         for exclude in excludes:
             if exclude in list(obj_dict.keys()):

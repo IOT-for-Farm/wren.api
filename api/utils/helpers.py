@@ -91,18 +91,54 @@ def generate_unique_id(
 def format_additional_info_create(additional_info: List[AdditionalInfoSchema]):
     '''Function to help format additional info for create endpoints into JSON format'''
     
-    return {info.key: info.value for info in additional_info}
+    data = {info.key: info.value for info in additional_info}
+    print(data)
+
+    return data
     
 
-def format_additional_info_update(additional_info: List[AdditionalInfoSchema], model_instance):
+def format_additional_info_update(
+    additional_info: List[AdditionalInfoSchema], 
+    model_instance, 
+    keys_to_remove: Optional[List[str]]=None
+):
     '''Function to help format additional info for update endpoints for an existing object'''
     
     current_additional_info_dict_copy = model_instance.additional_info.copy()
+    
     for info in additional_info:
         current_additional_info_dict_copy[info.key] = info.value
     
+    if keys_to_remove:    
+        for key in keys_to_remove:
+            if key not in list(current_additional_info_dict_copy.keys()):
+                print(f'Key {key} does not exist in dictionary')
+                continue
+            
+            del current_additional_info_dict_copy[key]
+    
     print(current_additional_info_dict_copy)
     return current_additional_info_dict_copy
+
+
+def format_attributes_update(attributes: List[AdditionalInfoSchema], model_instance, keys_to_remove: Optional[List[str]]=None):
+    '''Function to help format attributes for update endpoints for an existing object'''
+    
+    current_attributes_dict_copy = model_instance.attributes.copy()
+    
+    for info in attributes:
+        current_attributes_dict_copy[info.key] = info.value
+    
+    if keys_to_remove:
+        for key in keys_to_remove:
+            if key not in list(current_attributes_dict_copy.keys()):
+                print(f'Key {key} does not exist in dictionary')
+                continue
+            
+            del current_attributes_dict_copy[key]
+    
+    print(current_attributes_dict_copy)
+    return current_attributes_dict_copy
 
 
 def check_user_is_owner(user_id: str, model_instance, user_fk_name: str):

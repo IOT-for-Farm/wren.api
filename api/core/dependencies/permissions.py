@@ -60,15 +60,38 @@ PROJECT_PERMS = [
     "milestone:create", "milestone:update", "milestone:delete"
 ]
 
+PRODUCT_AND_SALES_PERMS = [
+    "product:create", "product:update", "product:delete",
+    "product-variant:create", "product-variant:update", "product-variant:delete",
+    "sale:create", "sale:update", "sale:delete",
+    "order:create", "order:update", "order:delete",
+    "inventory:create", "inventory:update", "inventory:delete",
+    "price:create", "price:update", "price:delete",
+    "vendor:create", "vendor:update", "vendor:delete",
+    "customer:create", "customer:update", "customer:delete",
+]
+
+CATEGORY_PERMS = [
+    "category:create", "category:update", "category:delete",
+]
+
+FINANCIAL_PERMS = [
+    "invoice:create", "invoice:update", "invoice:delete",
+    "refund:create", "refund:update", "refund:delete",
+    "payment:create", "payment:update", "payment:delete",
+]
+
 # Combined permission groups
 ADMIN_PERMS = (
     ORG_PERMS + CONTENT_PERMS + CAMPAIGN_PERMS + 
     BILLING_PERMS + REPORT_PERMS + APIKEY_PERMS + 
     FILE_PERMS + FORM_PERMS + EMAIL_TEMPLATE_PERMS +
-    PROJECT_PERMS
+    PROJECT_PERMS + PRODUCT_AND_SALES_PERMS + FINANCIAL_PERMS +
+    CATEGORY_PERMS
 )
 CONTENT_MANAGER_PERMS = CONTENT_PERMS + CAMPAIGN_PERMS + REPORT_PERMS + EMAIL_TEMPLATE_PERMS[6:]  # allow email sending
 EDITOR_PERMS = CONTENT_PERMS[:5]  # Exclude approve
+AGENT_PREMS = PRODUCT_AND_SALES_PERMS + FINANCIAL_PERMS + CATEGORY_PERMS + REPORT_PERMS + EMAIL_TEMPLATE_PERMS[6:]
 
 # Role to permissions mapping
 ROLE_PERMISSIONS: Dict[str, List[str]] = {
@@ -79,6 +102,7 @@ ROLE_PERMISSIONS: Dict[str, List[str]] = {
     # Organization roles
     "Owner": ADMIN_PERMS,
     "Admin": ADMIN_PERMS[1:],  # All except org:delete
+    "Agent": AGENT_PREMS,
     "Content Manager": CONTENT_MANAGER_PERMS,
     "Campaign Manager": CAMPAIGN_PERMS + REPORT_PERMS,
     

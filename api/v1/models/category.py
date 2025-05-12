@@ -11,6 +11,7 @@ class Category(BaseTableModel):
     name = sa.Column(sa.String, nullable=False)
     description = sa.Column(sa.Text, nullable=True)
     slug = sa.Column(sa.String, nullable=True, index=True, unique=True)
+    model_type = sa.Column(sa.String, nullable=False, index=True)
     
     parent_id = sa.Column(sa.String, sa.ForeignKey('categories.id', ondelete="cascade"), nullable=True, index=True)
     organization_id = sa.Column(sa.String, sa.ForeignKey('organizations.id'), index=True)
