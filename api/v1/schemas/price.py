@@ -12,6 +12,7 @@ class PriceBase(BaseModel):
     end_date: Optional[dt.datetime] = None
     min_quantity: Optional[int] = 1
     is_active: bool = True
+    notes: Optional[str] = None
     
     @field_validator("start_date")
     def validate_start_date(cls, v):
@@ -46,6 +47,7 @@ class PriceUpdate(BaseModel):
     end_date: Optional[dt.datetime] = None
     min_quantity: Optional[int] = None
     is_active: Optional[bool] = None
+    notes: Optional[str] = None
     
     @field_validator("start_date")
     def validate_start_date(cls, v):

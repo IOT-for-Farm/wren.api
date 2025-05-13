@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, Session, backref
 from sqlalchemy.ext.hybrid import hybrid_method
 
 from api.core.base.base_model import BaseTableModel
+from api.v1.schemas.business_partner import BusinessPartnerType
 
 
 class BusinessPartner(BaseTableModel):
@@ -12,7 +13,8 @@ class BusinessPartner(BaseTableModel):
     organization_id = sa.Column(sa.String, sa.ForeignKey("organizations.id"), nullable=False)
     user_id = sa.Column(sa.String, sa.ForeignKey("users.id"))
     
-    partner_type = sa.Column(sa.String, default='vendor')  # vendor/customer
+    partner_type = sa.Column(sa.String, default=BusinessPartnerType.vendor.value)  # vendor/customer
+    slug = sa.Column(sa.String, unique=True, index=True)
 
     # Contact & Identity
     first_name = sa.Column(sa.String, nullable=False)
@@ -29,7 +31,7 @@ class BusinessPartner(BaseTableModel):
     company_name = sa.Column(sa.String, nullable=True)
 
     # Metadata
-    is_active = sa.Column(sa.Boolean, server_default='false')
+    is_active = sa.Column(sa.Boolean, server_default='true')
 
     # Extensibility
     additional_info = sa.Column(sa.JSON, default={})
@@ -54,3 +56,11 @@ class BusinessPartner(BaseTableModel):
         lazy="selectin",
         viewonly=True
     )
+    
+    __table_args__ = (
+        sa.UniqueConstraint("organization_id", "email", name="uq_email_organization"),
+        sa.UniqueConstraint("organization_id", "phone", "phone_country_code", name="uq_phone_organization"),
+    )
+    
+    def to_dict(self, excludes = ...):
+        return super().to_dict(excludes=['password'])

@@ -32,6 +32,12 @@ async def create_product_variant(
         organization_id=payload.organization_id
     )
     
+    ProductService.product_belongs_to_organization(
+        db=db,
+        product_id=payload.product_id,
+        organization_id=payload.organization_id
+    )
+    
     if payload.attributes:
         payload.attributes = helpers.format_additional_info_create(payload.attributes)
     
@@ -59,9 +65,9 @@ async def create_product_variant(
 @product_variant_router.get("", status_code=200)
 async def get_product_variants(
     organization_id: str,
+    product_id: str,
     name: str = None,
     slug: str = None,
-    product_id: str = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
@@ -75,6 +81,12 @@ async def get_product_variants(
         entity=entity,
         organization_id=organization_id,
         db=db
+    )
+    
+    ProductService.product_belongs_to_organization(
+        db=db,
+        product_id=product_id,
+        organization_id=organization_id
     )
 
     query, product_variants, count = ProductVariant.fetch_by_field(
@@ -138,6 +150,14 @@ async def update_product_variant(
         permission='product-variant:update',
         organization_id=organization_id
     )
+    
+    variant = ProductVariant.fetch_by_id(db, id)
+    
+    ProductService.product_belongs_to_organization(
+        db=db,
+        product_id=variant.product_id,
+        organization_id=organization_id
+    )
 
     product_variant = ProductVariant.update(
         db=db,
@@ -175,6 +195,14 @@ async def delete_product_variant(
     AuthService.has_org_permission(
         db=db, entity=entity,
         permission='product-variant:delete',
+        organization_id=organization_id
+    )
+    
+    variant = ProductVariant.fetch_by_id(db, id)
+    
+    ProductService.product_belongs_to_organization(
+        db=db,
+        product_id=variant.product_id,
         organization_id=organization_id
     )
 

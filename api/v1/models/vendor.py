@@ -7,13 +7,6 @@ from api.v1.models.business_partner import BusinessPartner
 from api.v1.schemas.vendor import VendorType
 
 
-# class VendorTag(BaseTableModel):
-#     __tablename__ = 'vendor_tags'
-    
-#     vendor_id = sa.Column(sa.String, sa.ForeignKey("vendors.id"), nullable=False)
-#     tag_id = sa.Column(sa.String, sa.ForeignKey("tags.id"), nullable=False)
-    
-
 class Vendor(BusinessPartner):
     __tablename__ = 'vendors'
     

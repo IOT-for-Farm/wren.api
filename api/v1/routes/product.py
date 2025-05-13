@@ -93,6 +93,8 @@ async def get_products(
     slug: str = None,
     status: str = None,
     type: str = None,
+    vendor_id: str = None,
+    parent_id: str = None,
     is_available: bool = None,
     page: int = 1,
     per_page: int = 10,
@@ -124,6 +126,8 @@ async def get_products(
         status=status,
         type=type,
         is_available=is_available,
+        vendor_id=vendor_id,
+        parent_id=parent_id,
     )
     
     return paginator.build_paginated_response(

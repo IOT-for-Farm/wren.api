@@ -1,6 +1,8 @@
+from datetime import datetime
 import sqlalchemy as sa
 from sqlalchemy import event
 from sqlalchemy.orm import relationship, Session, backref
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from api.core.base.base_model import BaseTableModel
 from api.v1.schemas.product import ProductStatus, ProductType
@@ -113,6 +115,15 @@ class ProductVariant(BaseTableModel):
         viewonly=True
     )
     
+    price = relationship(
+        'ProductPrice',
+        backref='product_variants',
+        uselist=False,
+        primaryjoin='and_(ProductPrice.variant_id==ProductVariant.id, ProductPrice.is_active==True)',
+        lazy='selectin',
+        viewonly=True
+    )
+    
 
 class ProductPrice(BaseTableModel):
     __tablename__ = 'product_prices'
@@ -131,20 +142,26 @@ class ProductPrice(BaseTableModel):
     
     is_active = sa.Column(sa.Boolean, server_default='true')  # Tiered pricing
     
+    notes = sa.Column(sa.Text)
+    
     # Relationships
     product = relationship("Product")
     variant = relationship("ProductVariant")
 
-
-# class ProductCategory(BaseTableModel):
-#     __tablename__ = 'product_categories'
+    # @hybrid_property
+    # def is_active_price(cls):
+    #     if (cls.start_date and cls.end_date) and cls.is_active:
+    #         return cls.start_date < datetime.now() and cls.end_date > datetime.now()
+        
+    #     elif (cls.start_date and not cls.end_date) and cls.is_active:
+    #         return cls.start_date < datetime.now()
+        
+    #     return cls.is_active
     
-#     product_id = sa.Column(sa.String, sa.ForeignKey('products.id'), index=True, nullable=True)
-#     category_id = sa.Column(sa.String, sa.ForeignKey('categories.id'), index=True, nullable=True)
+    # @hybrid_property
+    # def is_active_price(self):
+    #     return self.start_date < datetime.now() and self.end_date > datetime.now()
 
-
-# class ProductTag(BaseTableModel):
-#     __tablename__ = 'product_tags'
-    
-#     product_id = sa.Column(sa.String, sa.ForeignKey('products.id'), index=True, nullable=True)
-#     tag_id = sa.Column(sa.String, sa.ForeignKey('tags.id'), index=True, nullable=True)
+    # @is_active_price.expression
+    # def is_active_price(cls):
+    #     return (cls.start_date < datetime.now()) & (cls.end_date > datetime.now())

@@ -8,6 +8,9 @@ ORG_PERMS = [
     "location:create", "location:update", "location:delete", "location:view", "contact_info:create",
     "contact_info:update", "contact_info:delete", "contact_info:view", "role:create",
     "role:update", "role:delete", "role:view", "organization:assign-role"
+    "business-partner:delete", "business-partner:attach-to-user", "business-partner:update", 
+    "business-partner:create",
+    
 ]
     
 CONTENT_PERMS = [

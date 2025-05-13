@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -6,7 +7,7 @@ from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.user import User
-from api.v1.models.product import ProductPrice
+from api.v1.models.product import ProductPrice, Product
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
 from api.v1.services.price import PriceService
@@ -19,11 +20,18 @@ logger = create_logger(__name__)
 
 @price_router.post("", status_code=201, response_model=success_response)
 async def create_price(
+    organization_id: str,
     payload: price_schemas.PriceCreate,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to create a new price"""
+        
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='price:create',
+        organization_id=organization_id
+    )
     
     # Deactiveate all active product prices so as to have only one active price per product
     if payload.is_active == True:
@@ -112,15 +120,23 @@ async def get_price_by_id(
 async def update_price(
     id: str,
     product_id: str,
+    organization_id: str,
     payload: price_schemas.PriceUpdate,
+    variant_id: Optional[str] = None,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to update a price"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='price:update',
+        organization_id=organization_id
+    )
 
     # Deactiveate all active product prices so as to have only one active price per product
     if payload.is_active and payload.is_active == True:
-        PriceService.deactivate_active_prices(db, product_id)
+        PriceService.deactivate_active_prices(db, product_id, variant_id)
         
     price = ProductPrice.update(
         db=db,
@@ -138,10 +154,17 @@ async def update_price(
 @price_router.delete("/{id}", status_code=200, response_model=success_response)
 async def delete_price(
     id: str,
+    organization_id: str,
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to delete a price"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='price:delete',
+        organization_id=organization_id
+    )
 
     ProductPrice.soft_delete(db, id)
 

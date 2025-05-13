@@ -55,7 +55,6 @@ class AuthService:
             
             return user, access_token, refresh_token
         
-        
         return user, None, None
     
     @classmethod
@@ -97,28 +96,6 @@ class AuthService:
     @classmethod
     def verify_token(cls, db: Session, token: str, expected_token_type: str, credentials_exception):
         """Base function to verify a token to get the user id"""
-        
-        # try:
-        #     payload = jwt.decode(
-        #         token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        #     )
-        #     user_id = payload.get("user_id")
-        #     jwt_payload_token_type = payload.get("type")
-            
-        #     # Check if token is blackliosted
-        #     blacklisted_token = BlacklistedToken.fetch_one_by_field(db=db, throw_error=False, token=token)
-
-        #     if user_id is None or blacklisted_token is not None:
-        #         raise credentials_exception
-                
-        #     if jwt_payload_token_type != expected_token_type:
-        #         raise HTTPException(detail=f"Token of type '{expected_token_type}' expected. Got '{jwt_payload_token_type}'", status_code=400)
-
-        # except JWTError as err:
-        #     logger.error(err)
-        #     raise credentials_exception
-
-        # return user_id
         
         payload = TokenService.decode_and_verify_token(
             db=db,

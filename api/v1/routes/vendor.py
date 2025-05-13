@@ -59,7 +59,8 @@ async def create_vendor(
 
 @vendor_router.get("", status_code=200)
 async def get_vendors(
-    search: str = None,
+    vendor_type: str = None,
+    payment_terms: str = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
@@ -78,6 +79,8 @@ async def get_vendors(
         search_fields={
             # 'email': search,
         },
+        payment_terms=payment_terms,
+        vendor_type=vendor_type
     )
     
     return paginator.build_paginated_response(
