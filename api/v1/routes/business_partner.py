@@ -123,12 +123,14 @@ async def create_business_partner(
 
 @business_partner_router.post('/login', status_code=200, response_model=success_response)
 async def business_partner_login(payload: business_partner_schemas.BusinessPartnerLogin, db: Session=Depends(get_db)):
-    """Endpoint to log in a business partner"""
+    """Endpoint to log in a business partner. 
+    The ID of the business partner can be the unique identifier of the logged in user instead of an access token"""
     
     business_partner, access_token, refresh_token = BusinessPartnerService.authenticate(
         db, 
         email=payload.email.lower().strip(), 
-        password=payload.password
+        password=payload.password,
+        create_token=False
     )
     
     logger.info(f'Business partner with id {business_partner.id} logged in successfully')
@@ -136,22 +138,23 @@ async def business_partner_login(payload: business_partner_schemas.BusinessPartn
     response = success_response(
         status_code=200,
         message='Logged in successfully',
-        data={
-            'access_token': access_token,
-            'refresh_token': refresh_token,
-            'business_partner': business_partner.to_dict()
-        }
+        # data={
+        #     'access_token': access_token,
+        #     'refresh_token': refresh_token,
+        #     'business_partner': business_partner.to_dict()
+        # }
+        data=business_partner.to_dict()
     )
     
     # Add refresh token to cookies
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        expires=timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
-        httponly=True,
-        secure=True,
-        samesite="none",
-    )
+    # response.set_cookie(
+    #     key="refresh_token",
+    #     value=refresh_token,
+    #     expires=timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
+    #     httponly=True,
+    #     secure=True,
+    #     samesite="none",
+    # )
     
     return response
 

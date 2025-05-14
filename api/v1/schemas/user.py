@@ -25,6 +25,23 @@ class UpdateUser(BaseModel):
     def strip_and_lower(cls, v: Optional[str]) -> Optional[str]:
         return v.strip().lower() if isinstance(v, str) else v
     
+    @field_validator('phone_country_code', mode='before')
+    @classmethod
+    def validate_phone_country_code(cls, v, values):
+        if values.data.get('phone') and not v:
+            raise ValueError("phone_country_code is required when phone is provided")
+        return v
+
+    @field_validator('phone_number', mode='before')
+    @classmethod
+    def validate_phone_number(cls, v, values):
+        if values.data.get('phone_country_code') and not v:
+            raise ValueError("phone is required when phone_country_code is provided")
+        
+        if v and not v.isdigit():
+            raise ValueError("Phone numbers must contain only digits")
+        return v
+    
     
 class AccountReactivationRequest(BaseModel):
     

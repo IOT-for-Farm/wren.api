@@ -67,7 +67,7 @@ async def get_sales(
 ):
     """Endpoint to get all sales"""
 
-    query, sales, count = Sale.all(
+    query, sales, count = Sale.fetch_by_field(
         db, 
         sort_by=sort_by,
         order=order.lower(),

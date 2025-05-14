@@ -41,13 +41,38 @@ class CustomerType(str, Enum):
     individual = 'individual'
     business = 'business'
 
+    
+class PaymentMethod(str, Enum):
+    
+    cash = 'cash'
+    bank_transfer = 'bank_transfer'
+    card = 'card'
+    
+
+class Gender(str, Enum):
+    
+    male = 'male'
+    female = 'female'
+    
+
 class CustomerBase(BaseModel):
 
     unique_id: Optional[str] = None
-
+    
+    language: Optional[str] = 'English'
+    gender: Optional[Gender] = None
+    age: Optional[int] = None
+    
+    customer_type: Optional[CustomerType] = CustomerType.individual
+    industry: Optional[IndustryEnum] = None
+    preferred_payment_method: Optional[PaymentMethod] = PaymentMethod.cash
 
 class UpdateCustomer(BaseModel):
 
-    unique_id: Optional[str] = None
-
-
+    language: Optional[str] = None
+    gender: Optional[Gender] = None
+    age: Optional[int] = None
+    
+    customer_type: Optional[CustomerType] = None
+    industry: Optional[IndustryEnum] = None
+    preferred_payment_method: Optional[PaymentMethod] = None
