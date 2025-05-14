@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
 
 class CategoryBase(BaseModel):
@@ -19,3 +19,10 @@ class UpdateCategory(BaseModel):
     description: Optional[str] = None
     slug: Optional[str] = None
     parent_id: Optional[str] = None
+
+
+class AttachOrDetatchCategory(BaseModel):
+    
+    category_ids: List[str]
+    entity_id: str
+    model_type: str

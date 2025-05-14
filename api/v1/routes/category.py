@@ -99,6 +99,64 @@ async def get_categories(
         size=per_page,
         total=count,
     )
+    
+
+@category_router.post("/attach", status_code=201, response_model=success_response)
+async def attach_category_to_eneity(
+    organization_id: str,
+    payload: category_schemas.AttachOrDetatchCategory,
+    db: Session=Depends(get_db), 
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
+):
+    """Endpoint to attach a category to an entity"""
+    
+    AuthService.belongs_to_organization(
+        db=db,
+        organization_id=organization_id,
+        entity=entity
+    )  
+    
+    CategoryService.create_category_association(
+        db=db,
+        category_ids=payload.category_ids,
+        organization_id=organization_id,
+        model_type=payload.model_type,
+        entity_id=payload.entity_id
+    )
+
+    return success_response(
+        message=f"Categories attached to entity successfully",
+        status_code=200
+    )
+    
+
+@category_router.post("/detatch", status_code=201, response_model=success_response)
+async def detatch_category_from_entity(
+    organization_id: str,
+    payload: category_schemas.AttachOrDetatchCategory,
+    db: Session=Depends(get_db), 
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
+):
+    """Endpoint to detatch a category from an entity"""
+    
+    AuthService.belongs_to_organization(
+        db=db,
+        organization_id=organization_id,
+        entity=entity
+    )  
+    
+    CategoryService.delete_category_association(
+        db=db,
+        category_ids=payload.category_ids,
+        organization_id=organization_id,
+        model_type=payload.model_type,
+        entity_id=payload.entity_id
+    )
+
+    return success_response(
+        message=f"Categories detatched from entity successfully",
+        status_code=200
+    )
 
 
 @category_router.get("/{id}", status_code=200, response_model=success_response)

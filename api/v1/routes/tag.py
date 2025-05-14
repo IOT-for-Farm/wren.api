@@ -109,6 +109,64 @@ async def get_tags(
         size=per_page,
         total=count,
     )
+    
+
+@tag_router.post("/attach", status_code=201, response_model=success_response)
+async def attach_tag_to_eneity(
+    organization_id: str,
+    payload: tag_schemas.AttachOrDetatchTag,
+    db: Session=Depends(get_db), 
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
+):
+    """Endpoint to attach a tag to an entity"""
+    
+    AuthService.belongs_to_organization(
+        db=db,
+        organization_id=organization_id,
+        entity=entity
+    )  
+    
+    TagService.create_tag_association(
+        db=db,
+        tag_ids=payload.tag_ids,
+        organization_id=organization_id,
+        model_type=payload.model_type,
+        entity_id=payload.entity_id
+    )
+
+    return success_response(
+        message=f"Tag(s) attached to entity successfully",
+        status_code=200
+    )
+    
+
+@tag_router.post("/detatch", status_code=201, response_model=success_response)
+async def detatch_tag_from_entity(
+    organization_id: str,
+    payload: tag_schemas.AttachOrDetatchTag,
+    db: Session=Depends(get_db), 
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
+):
+    """Endpoint to detatch a tag from an entity"""
+    
+    AuthService.belongs_to_organization(
+        db=db,
+        organization_id=organization_id,
+        entity=entity
+    )  
+    
+    TagService.delete_tag_association(
+        db=db,
+        tag_ids=payload.tag_ids,
+        organization_id=organization_id,
+        model_type=payload.model_type,
+        entity_id=payload.entity_id
+    )
+
+    return success_response(
+        message=f"Tag(s) detatched from entity successfully",
+        status_code=200
+    )
 
 
 @tag_router.get("/{id}", status_code=200, response_model=success_response)

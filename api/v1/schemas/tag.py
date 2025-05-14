@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import List, Optional
 
 
 class TagBase(BaseModel):
@@ -27,3 +27,10 @@ class UpdateTag(BaseModel):
     @classmethod
     def strip_and_lower(cls, v: Optional[str]) -> Optional[str]:
         return v.strip().lower() if isinstance(v, str) else v
+
+
+class AttachOrDetatchTag(BaseModel):
+    
+    tag_ids: List[str]
+    entity_id: str
+    model_type: str
