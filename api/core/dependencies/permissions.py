@@ -52,7 +52,8 @@ FORM_PERMS = [
 EMAIL_TEMPLATE_PERMS = [
     "template:create", "template:update", "template:delete",
     "layout:create", "layout:update", "layout:delete",
-    "email:send", "email:receive"
+    "email:create", "email:update", "email:delete",
+    "email:receive", "email:send",
 ]
 
 PROJECT_PERMS = [
@@ -76,6 +77,7 @@ PRODUCT_AND_SALES_PERMS = [
 
 CATEGORY_PERMS = [
     "category:create", "category:update", "category:delete",
+    "category:attach", "category:detatch",
 ]
 
 FINANCIAL_PERMS = [
@@ -92,7 +94,7 @@ ADMIN_PERMS = (
     PROJECT_PERMS + PRODUCT_AND_SALES_PERMS + FINANCIAL_PERMS +
     CATEGORY_PERMS
 )
-CONTENT_MANAGER_PERMS = CONTENT_PERMS + CAMPAIGN_PERMS + REPORT_PERMS + EMAIL_TEMPLATE_PERMS[6:]  # allow email sending
+CONTENT_MANAGER_PERMS = CONTENT_PERMS + CAMPAIGN_PERMS + REPORT_PERMS + [EMAIL_TEMPLATE_PERMS[-1]]  # allow email sending
 EDITOR_PERMS = CONTENT_PERMS[:5]  # Exclude approve
 AGENT_PREMS = PRODUCT_AND_SALES_PERMS + FINANCIAL_PERMS + CATEGORY_PERMS + REPORT_PERMS + EMAIL_TEMPLATE_PERMS[6:]
 

@@ -68,6 +68,8 @@ async def create_${file_name}(
         **payload.model_dump(exclude_unset=True)
     )
 
+    logger.info(f'${file_name^} with id {${file_name}.id} created')
+
     return success_response(
         message=f"${file_name^} created successfully",
         status_code=201,
@@ -138,6 +140,8 @@ async def update_${file_name}(
         id=id,
         **payload.model_dump(exclude_unset=True)
     )
+
+    logger.info(f'${file_name^} with id {${file_name}.id} updated')
 
     return success_response(
         message=f"${file_name^} updated successfully",

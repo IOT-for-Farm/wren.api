@@ -25,7 +25,10 @@ class Order(BaseTableModel):
     
     status = sa.Column(sa.String, default=OrderStatus.pending.value, index=True)
     
+    additional_info = sa.Column(sa.JSON, default={})
+    
     items = relationship('OrderItem', back_populates='order', lazy='selectin')
+    # invoice = relationship('Invoice', back_populates='order', foreign_keys=[invoice_id], uselist=False)
     customer = relationship(
         'Customer',
         backref='orders',
@@ -38,13 +41,20 @@ class Order(BaseTableModel):
         '''Get total amount of items in order'''
         
         total = 0.00
+        
         for item in self.items:
-            if item.product.price:
-                total += item.product.price.selling_price if self.product.prise else 0.00
-            else:
+            if not item.product.price:
                 continue
+            
+            total += float(item.product.price.selling_price * item.quantity) if item.product.price else 0.00
         
         return total
+    
+    def to_dict(self, excludes=[]):
+        return {
+            'total_amount': self.total_amount,
+            **super().to_dict(excludes),
+        }
     
 
 class OrderItem(BaseTableModel):

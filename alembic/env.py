@@ -6,6 +6,16 @@ from config import config as decouple_config
 from api.v1.models import *
 from api.db.database import Base
 
+from api.utils.settings import settings, BASE_DIR
+
+
+DB_HOST = settings.DB_HOST
+DB_PORT = settings.DB_PORT
+DB_USER = settings.DB_USER
+DB_PASSWORD = settings.DB_PASSWORD
+DB_NAME = settings.DB_NAME
+DB_TYPE = settings.DB_TYPE
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -15,7 +25,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-database_url = decouple_config('DB_URL')
+database_url = (
+    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 # Set the SQLAlchemy URL dynamically
 config.set_main_option('sqlalchemy.url', database_url)

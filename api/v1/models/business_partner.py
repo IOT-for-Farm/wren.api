@@ -59,7 +59,7 @@ class BusinessPartner(BaseTableModel):
     
     __table_args__ = (
         sa.UniqueConstraint("organization_id", "email", name="uq_email_organization"),
-        sa.UniqueConstraint("organization_id", "phone", "phone_country_code", name="uq_phone_organization"),
+        # sa.UniqueConstraint("organization_id", "phone", "phone_country_code", name="uq_phone_organization"),
     )
     
     def to_dict(self, excludes = ...):

@@ -40,7 +40,8 @@ async def create_business_partner(
     existing_email_in_org = BusinessPartner.fetch_one_by_field(
         db=db, throw_error=False,
         email=payload.email,
-        organization_id=payload.organization_id
+        organization_id=payload.organization_id,
+        partner_type=payload.partner_type
     )
     
     if existing_email_in_org:
@@ -56,7 +57,7 @@ async def create_business_partner(
         )
     
     if not payload.slug and payload.company_name:
-        payload.slug = slugify(payload.company_name)
+        payload.slug = f'{payload.unique_id}-{slugify(payload.company_name)}'
     
     if payload.additional_info:
         payload.additional_info = helpers.format_additional_info_create(payload.additional_info)

@@ -35,7 +35,7 @@ class BaseTableModel(Base):
             obj_dict["updated_at"] = self.updated_at.isoformat()
             
         # Get hybrid properties
-        for name, attr in getmembers(type(self)):
+        for name, attr in getmembers(self):
             if isinstance(attr, hybrid_property):
                 obj_dict[name] = getattr(self, name)
                 

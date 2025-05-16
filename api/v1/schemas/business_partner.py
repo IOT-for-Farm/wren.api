@@ -46,6 +46,23 @@ class BusinessPartnerBase(BaseModel):
     def strip_and_lower(cls, v: Optional[str]) -> Optional[str]:
         return v.strip().lower() if isinstance(v, str) else v
     
+    @field_validator('phone_country_code', mode='before')
+    @classmethod
+    def validate_phone_country_code(cls, v, values):
+        if values.data.get('phone') and not v:
+            raise ValueError("phone_country_code is required when phone is provided")
+        return v
+
+    @field_validator('phone', mode='before')
+    @classmethod
+    def validate_phone(cls, v, values):
+        if values.data.get('phone_country_code') and not v:
+            raise ValueError("phone is required when phone_country_code is provided")
+        
+        if v and not v.isdigit():
+            raise ValueError("Phone numbers must contain only digits")
+        return v
+    
 
 class UpdateBusinessPartner(BaseModel):
 
@@ -70,6 +87,23 @@ class UpdateBusinessPartner(BaseModel):
     @classmethod
     def strip_and_lower(cls, v: Optional[str]) -> Optional[str]:
         return v.strip().lower() if isinstance(v, str) else v
+    
+    @field_validator('phone_country_code', mode='before')
+    @classmethod
+    def validate_phone_country_code(cls, v, values):
+        if values.data.get('phone') and not v:
+            raise ValueError("phone_country_code is required when phone is provided")
+        return v
+
+    @field_validator('phone', mode='before')
+    @classmethod
+    def validate_phone(cls, v, values):
+        if values.data.get('phone_country_code') and not v:
+            raise ValueError("phone is required when phone_country_code is provided")
+        
+        if v and not v.isdigit():
+            raise ValueError("Phone numbers must contain only digits")
+        return v
 
 
 class BusinessPartnerLogin(BaseModel):

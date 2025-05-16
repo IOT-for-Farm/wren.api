@@ -163,3 +163,7 @@ def generate_content_translations(content: dict):
             )
             
             task_logger.info(f'Translation for content {content["title"]} with langauge code `{code}` saved to the database')
+
+
+# TODO: Write a function that checks through all inventories and takes the ones that have gone below or are approaching
+# their reorder threshold and send notification to the vendor or organization or both

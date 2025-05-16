@@ -95,6 +95,15 @@ class Product(BaseTableModel):
         viewonly=True
     )
     
+    inventory = relationship(
+        'Inventory',
+        backref='product_invetory',
+        uselist=False,
+        primaryjoin='and_(Inventory.product_id==Product.id, Inventory.is_active==True)',
+        lazy='selectin',
+        viewonly=True
+    )
+    
 
 class ProductVariant(BaseTableModel):
     __tablename__ = 'product_variants'
@@ -120,6 +129,15 @@ class ProductVariant(BaseTableModel):
         backref='product_variants',
         uselist=False,
         primaryjoin='and_(ProductPrice.variant_id==ProductVariant.id, ProductPrice.is_active==True)',
+        lazy='selectin',
+        viewonly=True
+    )
+    
+    inventory = relationship(
+        'Inventory',
+        backref='product_variant_inventory',
+        uselist=False,
+        primaryjoin='and_(Inventory.variant_id==ProductVariant.id, Inventory.is_active==True)',
         lazy='selectin',
         viewonly=True
     )

@@ -13,8 +13,7 @@ class Inventory(BaseTableModel):
     variant_id = sa.Column(sa.String, sa.ForeignKey("product_variants.id"))
     
     # Stock Levels
-    current_quantity = sa.Column(sa.Integer, default=0)
-    initial_quantity = sa.Column(sa.Integer, default=0)  # Reserved for orders
+    quantity = sa.Column(sa.Integer, default=0)
     
     # Replenishment
     reorder_threshold = sa.Column(sa.Integer)  # amount to notify the organization when there is need to restock

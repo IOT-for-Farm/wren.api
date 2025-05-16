@@ -65,15 +65,40 @@ class Sale(BaseTableModel):
     )
 
     @hybrid_property
-    def total_price(self):
+    def total_price_of_sale(self):
         '''Get total price of sale'''
             
         product_price = self.product.price.selling_price if self.product.prise else 0.00
         return self.quantity * product_price
     
     @hybrid_property
-    def profit(self):
-        '''Get profit on sale'''
+    def profit_on_sale(self):
+        '''Get overall profit on sale'''
         
         profit_on_single_product = (self.product.price.selling_price - self.product.price.cost_price) if self.product.prise else 0.00
         return profit_on_single_product * self.quantity
+    
+    @hybrid_property
+    def vendor_profit(self):
+        '''Get the vendor profit on sale'''
+        
+        if not self.vendor_id:
+            return 0.00
+        
+        vendor_percentage = 100 - self.vendor.commission_percentage
+        profit = self.profit_on_sale * (vendor_percentage/100)
+        return profit
+    
+    @hybrid_property
+    def organization_profit(self):
+        return self.profit_on_sale - self.vendor_profit
+        
+
+    def to_dict(self, excludes=[]):
+        return {
+            'total_price_of_sale': self.total_price_of_sale,
+            'profit_on_sale': self.profit_on_sale,
+            'vendor_profit': self.vendor_profit,
+            'organization_profit': self.organization_profit,
+            **super().to_dict(excludes)
+        }

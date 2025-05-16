@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Order Notification</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #F8F9FA; font-family: Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8F9FA;">
+      <tr>
+        <td align="center">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 1px solid #ECF0F1;">
+            <!-- Header -->
+            <tr valign="top">
+              <td style="padding: 20px; text-align: center;">
+                <h2 style="margin: 0; font-size: 20px; color: #2C3E50;">Order #{{ order.unique_id }} - {{ order.status|title }}</h2>
+              </td>
+            </tr>
+
+            <!-- Customer Info -->
+            <tr valign="top">
+              <td style="padding: 0 20px;">
+                <p style="margin: 0 0 5px;">Hello {{ business_partner.first_name }},</p>
+                {% if business_partner.partner_type == "customer" %}
+                <p style="margin: 0 0 15px;">Thank you for your order. Here are the details:</p>
+                {% else %}
+                <p style="margin: 0 0 15px;">You have a new order:</p>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Order Summary -->
+            <tr valign="top">
+              <td style="padding: 0 20px;">
+                <h4 style="margin-bottom: 10px; color: #2C3E50;">Order Summary</h4>
+                <table width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #F2F2F2;">
+                      <th align="left" style="border: 1px solid #ECF0F1;">Product</th>
+                      <th align="center" style="border: 1px solid #ECF0F1;">Quantity</th>
+                      <th align="right" style="border: 1px solid #ECF0F1;">Price/unit</th>
+                      <th align="right" style="border: 1px solid #ECF0F1;">Total Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                      <td style="border: 1px solid #ECF0F1;">{{ item.product.name }}</td>
+                      <td align="center" style="border: 1px solid #ECF0F1;">{{ item.quantity }}</td>
+
+                      {% if item.product.price %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">{{ item.product.price.selling_price }}</td>
+                      {% else %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">0.00</td>
+                      {% endif %}
+
+                      {% if item.product.price %}
+                      {% set amount_paid = item.product.price.selling_price * item.quantity %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">{{ amount_paid }}</td>
+                      {% else %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">0.00</td>
+                      {% endif %}
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                      <td colspan="3" align="right" style="border: 1px solid #ECF0F1; font-weight: bold;">Subtotal</td>
+                      <td align="right" style="border: 1px solid #ECF0F1; font-weight: bold;">{{ order.total_amount }} {{ order.currency_code }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 20px; font-size: 13px; color: #7F8C8D; text-align: center;">
+                If you have any questions or need help, please contact our support team.<br/>
+                Thank you for choosing us.
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
