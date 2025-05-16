@@ -72,6 +72,7 @@ async def create_order(
             
             new_business_partner = BusinessPartner.create(
                 db=db,
+                unique_id=helpers.generate_unique_id(db, payload.organization_id),
                 organization_id=payload.organization_id,
                 partner_type='customer',
                 email=payload.customer_email,
@@ -345,6 +346,7 @@ async def update_order(
                 product_id=item.product_id,
                 organization_id=organization_id,
                 quantity=item.quantity,
+                currency_code=order.currency_code,
                 customer_name=order.customer_name if order.customer_name else None,
                 customer_email=order.customer_email if order.customer_email else None,
                 customer_phone=order.customer_phone if order.customer_phone else None,

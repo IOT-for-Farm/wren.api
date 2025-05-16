@@ -6,7 +6,7 @@ from api.core.base.base_model import BaseTableModel
 from api.v1.models.business_partner import BusinessPartner
 
 
-class Customer(BaseTableModel):
+class Customer(BusinessPartner):
     __tablename__ = 'customers'
     
     business_partner_id = sa.Column(

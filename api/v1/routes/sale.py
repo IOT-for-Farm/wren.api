@@ -22,7 +22,7 @@ logger = create_logger(__name__)
 async def create_sale(
     payload: sale_schemas.SaleCreate,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to create a new sale"""
     
@@ -57,13 +57,17 @@ async def create_sale(
 
 @sale_router.get("", status_code=200)
 async def get_sales(
+    organization_id: str,
+    product_id: str = None,
+    vendor_id: str = None,
+    customer_id: str = None,
     unique_id: str = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
     order: str = 'desc',
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get all sales"""
 
@@ -76,6 +80,10 @@ async def get_sales(
         search_fields={
             'unique_id': unique_id,
         },
+        organization_id=organization_id,
+        product_id=product_id,
+        customer_id=customer_id,
+        vendor_id=vendor_id
     )
     
     return paginator.build_paginated_response(
@@ -91,7 +99,7 @@ async def get_sales(
 async def get_sale_by_id(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get a sale by ID or unique_id in case ID fails."""
 
@@ -110,7 +118,7 @@ async def update_sale(
     organization_id: str,
     payload: sale_schemas.UpdateSale,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to update a sale"""
 
@@ -142,7 +150,7 @@ async def update_sale(
 async def delete_sale(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to delete a sale"""
 

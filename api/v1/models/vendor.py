@@ -7,7 +7,7 @@ from api.v1.models.business_partner import BusinessPartner
 from api.v1.schemas.vendor import VendorType
 
 
-class Vendor(BaseTableModel):
+class Vendor(BusinessPartner):
     __tablename__ = 'vendors'
     
     business_partner_id = sa.Column(

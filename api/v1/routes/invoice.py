@@ -21,7 +21,7 @@ logger = create_logger(__name__)
 async def create_invoice(
     payload: invoice_schemas.InvoiceBase,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to create a new invoice"""
 
@@ -45,7 +45,7 @@ async def get_invoices(
     sort_by: str = 'created_at',
     order: str = 'desc',
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get all invoices"""
 
@@ -73,7 +73,7 @@ async def get_invoices(
 async def get_invoice_by_id(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get a invoice by ID or unique_id in case ID fails."""
 
@@ -91,7 +91,7 @@ async def update_invoice(
     id: str,
     payload: invoice_schemas.UpdateInvoice,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to update a invoice"""
 
@@ -112,7 +112,7 @@ async def update_invoice(
 async def delete_invoice(
     id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to delete a invoice"""
 
