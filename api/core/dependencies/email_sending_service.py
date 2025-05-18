@@ -110,35 +110,12 @@ async def send_email(
         
         if template_name:
             html = get_html_from_template(template_name)
-            jinja_template = Jinja2Templates(html)
-            rendered_html = jinja_template.render(template_context)
-            
-            # if add_pdf_attachment:
-                # Get html string from file
-                
-                # pdf_path = generate_pdf_from_html(rendered_html)
-                # attachments = attachments or []
-                # attachments.append(pdf_path)
-                
-            # if attachments:
-            #     message = MessageSchema(
-            #         subject=subject,
-            #         recipients=recipients,
-            #         template_body=template_context,
-            #         subtype=MessageType.html,
-            #         attachments=attachments,
-            #     )
-            # else:
-            #     message = MessageSchema(
-            #         subject=subject,
-            #         recipients=recipients,
-            #         template_body=template_context,
-            #         subtype=MessageType.html
-            #     )
         
         if html_template_string:
-            jinja_template = Jinja2Templates(html_template_string)
-            rendered_html = jinja_template.render(template_context)
+            html = html_template_string
+        
+        jinja_template = Jinja2Templates(html)
+        rendered_html = jinja_template.render(template_context)
             
         if add_pdf_attachment:
             pdf_path = generate_pdf_from_html(rendered_html)
@@ -165,11 +142,6 @@ async def send_email(
         
         fm = FastMail(conf)
         
-        # if template_name:
-        #     logger.info(f'Sending mail from template `{template_name}`')
-        #     await fm.send_message(message, template_name)
-            
-        # if html_template_string:
         logger.info(f'Sending mail')
         await fm.send_message(message)
         
