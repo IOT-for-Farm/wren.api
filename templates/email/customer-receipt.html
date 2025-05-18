@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ subject }}</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #F8F9FA; font-family: Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8F9FA;">
+      <tr>
+        <td align="center">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 1px solid #ECF0F1;">
+            
+            <!-- Header -->
+            <tr>
+              <td style="padding: 20px; text-align: center;">
+                <h2 style="margin: 0; font-size: 22px; color: #2C3E50;">Receipt for Payment - Order #{{ order.unique_id }}</h2>
+                <p style="color: #7F8C8D; margin-top: 5px;">{{ receipt.payment_date }}</p>
+              </td>
+            </tr>
+
+            <!-- Customer Info -->
+            <tr>
+              <td style="padding: 0 20px 10px;">
+                <p style="margin: 0 0 5px;">Hello {{ business_partner.first_name }},</p>
+                <p style="margin: 0 0 15px;">Thank you for your payment. Here is your receipt:</p>
+              </td>
+            </tr>
+
+            <!-- Receipt Details -->
+            {% if order_items %}
+            <tr>
+              <td style="padding: 0 20px;">
+                <table width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #F2F2F2;">
+                      <th align="left" style="border: 1px solid #ECF0F1;">Item</th>
+                      <th align="center" style="border: 1px solid #ECF0F1;">Quantity</th>
+                      <th align="right" style="border: 1px solid #ECF0F1;">Unit Price</th>
+                      <th align="right" style="border: 1px solid #ECF0F1;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                      <td style="border: 1px solid #ECF0F1;">{{ item.product.name }}</td>
+                      <td align="center" style="border: 1px solid #ECF0F1;">{{ item.quantity }}</td>
+                      {% if item.product.price %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">{{ item.product.price.selling_price }}</td>
+                      {% else %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">0.00</td>
+                      {% endif %}
+
+                      {% if item.product.price %}
+                      {% set amount_paid = item.product.price.selling_price * item.quantity %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">{{ amount_paid }}</td>
+                      {% else %}
+                      <td align="right" style="border: 1px solid #ECF0F1;">0.00</td>
+                      {% endif %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- Payment Summary -->
+            <tr>
+              <td style="padding: 20px;">
+                <table width="100%" style="font-size: 14px;">
+                  <tr>
+                    <td align="right" style="padding: 5px 0;">Subtotal:</td>
+                    <td align="right" style="padding: 5px 0;">{{ invoice.subtotal }} {{ invoice.currency_code }}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="padding: 5px 0;">Tax:</td>
+                    <td align="right" style="padding: 5px 0;">{{ invoice.tax }} {{ invoice.currency_code }}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="padding: 5px 0;">Discount:</td>
+                    <td align="right" style="padding: 5px 0;">-{{ invoice.discount }} {{ invoice.currency_code }}</td>
+                  </tr>
+                  <tr style="font-weight: bold;">
+                    <td align="right" style="padding: 10px 0;">Total Paid:</td>
+                    <td align="right" style="padding: 10px 0;">{{ receipt.amount }} {{ invoice.currency_code }}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Payment Method -->
+            <tr>
+              <td style="padding: 0 20px 20px;">
+                <p style="margin: 0;">Payment Method: {{ receipt.payment_method }}</p>
+                <p style="margin: 5px 0 0;">Transaction ID: {{ receipt.unique_id }}</p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 20px; font-size: 13px; color: #7F8C8D; text-align: center;">
+                This is an automated receipt. If you have any questions, contact our support.<br/>
+                Thank you for your business!
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

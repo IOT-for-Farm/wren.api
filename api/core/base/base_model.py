@@ -14,12 +14,16 @@ class BaseTableModel(Base):
 
     __abstract__ = True
 
+    # Add flag to skip logging dynamically
+    _disable_activity_logging = False
+    
     id = sa.Column(sa.String, primary_key=True, index=True, default=lambda: str(uuid4().hex))
     unique_id = sa.Column(sa.String, nullable=True)
     is_deleted = sa.Column(sa.Boolean, server_default='false')
     created_at = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now())
     updated_at = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now())
 
+    
     def to_dict(self, excludes: List[str] = []) -> Dict[str, Any]:
         """Returns a dictionary representation of the instance"""
         

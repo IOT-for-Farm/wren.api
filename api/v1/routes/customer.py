@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+import csv
+from io import StringIO
+from pprint import pprint
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -64,8 +67,84 @@ async def create_customer(
 
     return success_response(
         message=f"Customer created successfully",
-        status_code=200,
+        status_code=201,
         data=customer.to_dict()
+    )
+    
+# TODO: Implement bulk upload of customers
+@customer_router.post("/bulk-upload", status_code=201, response_model=success_response)
+async def bulk_upload_customer(
+    organization_id: str,
+    file: UploadFile=File(...),
+    db: Session=Depends(get_db), 
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
+):
+    """
+    Endpoint to create multiple customers by using a csv file.
+    The CSV file should contain the following:
+    - first_name
+    - last_name
+    - email
+    - phone
+    - phone_country_code
+    """
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='customer:create-bulk',
+        organization_id=organization_id
+    )
+    
+    # Read the file contents
+    contents = await file.read()
+    
+    # Convert bytes to string
+    csv_string = contents.decode('utf-8')
+    
+    # Parse CSV using StringIO and csv.reader
+    csv_reader = csv.reader(StringIO(csv_string))
+    
+    # Convert to list of dictionaries (if header row exists)
+    rows = list(csv_reader)
+    headers = rows[0]  # Assuming first row is header
+    data = [dict(zip(headers, row)) for row in rows[1:]]
+    
+    pprint(data)
+    
+    for payload in data:
+        pass
+        
+    # # Check if business partner exists
+    # BusinessPartner.fetch_one_by_field(
+    #     db=db,
+    #     id=business_partner_id,
+    #     partner_type="customer"
+    # )
+    
+    # # Check for existing customer
+    # existing_customer = Customer.fetch_one_by_field(
+    #     db=db, throw_error=False,
+    #     business_partner_id=business_partner_id
+    # )
+    
+    # if existing_customer:
+    #     raise HTTPException(400, "Customer with this business partner id already exists")
+    
+    # if not payload.unique_id:
+    #     payload.unique_id = helpers.generate_unique_id(
+    #         db=db, 
+    #         organization_id=organization_id,
+    #     )
+
+    # customer = Customer.create(
+    #     db=db,
+    #     business_partner_id=business_partner_id,
+    #     **payload.model_dump(exclude_unset=True)
+    # )
+
+    return success_response(
+        message=f"Bulk upload successful",
+        status_code=201
     )
 
 

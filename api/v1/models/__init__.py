@@ -20,7 +20,9 @@ from api.v1.models.business_partner import BusinessPartner
 from api.v1.models.invoice import Invoice
 from api.v1.models.order import Order
 from api.v1.models.payment import Payment
+from api.v1.models.receipt import Receipt
 from api.v1.models.sale import Sale
+from api.v1.models.refund import Refund
 from api.v1.models.project import (
     Project, Milestone, ProjectMember,
     Task, TaskAssignee

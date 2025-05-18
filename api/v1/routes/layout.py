@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -20,7 +20,7 @@ logger = create_logger(__name__)
 
 @layout_router.post("", status_code=201, response_model=success_response)
 async def create_layout(
-    payload: layout_schemas.LayoutBase,
+    payload: layout_schemas.LayoutBase = Form(media_type="multipart/form-data"),
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
@@ -47,9 +47,22 @@ async def create_layout(
             detail=f"Layout with name '{payload.name}' already exists"
         )
 
+    if payload.file:
+        # Check file extension
+        file_extension = payload.file.filename.split('.')[-1]
+        
+        if file_extension != 'html':
+            raise HTTPException(400, f'Invalid file extension. Expected html and got {file_extension}')
+        
+        # Read the file contents
+        contents = await payload.file.read()
+        
+        # Convert bytes to string
+        payload.layout = contents.decode('utf-8')
+        
     layout = Layout.create(
         db=db,
-        **payload.model_dump(exclude_unset=True)
+        **payload.model_dump(exclude_unset=True, exclude=['file'])
     )
 
     return success_response(

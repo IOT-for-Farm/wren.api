@@ -1,3 +1,4 @@
+from pprint import pprint
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,7 @@ from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.business_partner import BusinessPartner
 from api.v1.models.customer import Customer
+from api.v1.models.comment import Comment
 from api.v1.models.invoice import Invoice
 from api.v1.models.product import Product
 from api.v1.models.sale import Sale
@@ -15,9 +17,11 @@ from api.v1.models.order import Order, OrderItem
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
 from api.v1.services.inventory import InventoryService
+from api.v1.services.invoice import InvoiceService
 from api.v1.services.order import OrderService
 from api.v1.schemas import order as order_schemas
 from api.utils.loggers import create_logger
+from api.v1.services.organization import OrganizationService
 from api.v1.services.product import ProductService
 
 
@@ -109,11 +113,15 @@ async def create_order(
             InventoryService.check_and_update_inventory(
                 db=db,
                 quantity_to_update=item.quantity,
-                product_id=item.product_id
+                product_id=item.product_id,
+                operation='remove'
             )
         except HTTPException as e:
             order.status = "failed"
             db.commit()
+            
+            # TODO: Send telex notification
+            
             raise e
         
         OrderItem.create(
@@ -221,14 +229,59 @@ async def update_order(
     
     order = Order.fetch_by_id(db, id)
     
-    if order.status in ['cancelled', 'accepted', 'failed']:
+    if order.status in ['cancelled', 'paid', 'failed', 'rejected']:
         raise HTTPException(400, "You have no access to this order has it has been closed")
-
+    
+    if (order.status != 'pending') and (payload.status == order_schemas.OrderStatus.accepted):
+        raise HTTPException(400, f'Cannot update from `{order.status}` to `{payload.status.value}`')
+        
+    # if (order.status not in ['pending', 'accepted']) and (payload.status == order_schemas.OrderStatus.paid):
+    if (order.status != 'accepted') and (payload.status == order_schemas.OrderStatus.paid):
+        raise HTTPException(400, f'Cannot update from `{order.status}` to `{payload.status.value}`')
+        
     order = Order.update(
         db=db,
         id=id,
-        **payload.model_dump(exclude_unset=True, exclude=['order_items', 'additional_info', 'additional_info_keys_to_remove'])
+        **payload.model_dump(exclude_unset=True, exclude=[
+            'order_items', 'additional_info', 
+            'additional_info_keys_to_remove',
+            'rejection_reason'
+        ])
     )
+    
+    # If order is cancelled or rejected replienish the inventory
+    if payload.status in ['cancelled', 'rejected']:
+        for item in order.items:
+            InventoryService.check_and_update_inventory(
+                db=db,
+                quantity_to_update=item.quantity,
+                product_id=item.product_id,
+                operation='add'
+            )
+            
+        # Send notification to the user   
+        OrderService.send_order_notification(
+            bg_tasks=bg_tasks,
+            db=db,
+            order=order,
+            to='customer',
+            organization_id=organization_id
+        )
+        
+        if payload.status == 'rejected':
+            # Create comment with rejection reason
+            Comment.create(
+                db=db,
+                model_name='orders',
+                model_id=order.id,
+                commenter_id=entity.entity.id if entity.type == 'user' else entity.entity.user_id,
+                text=f'Order rejected.\nReason: {payload.rejection_reason}' 
+            )
+            
+        return success_response(
+            message=f"Order {payload.status.value} successfully",
+            status_code=200
+        )
     
     if payload.additional_info:
         order.additional_info = helpers.format_additional_info_update(
@@ -236,8 +289,7 @@ async def update_order(
             model_instance=order,
             keys_to_remove=payload.additional_info_keys_to_remove
         )
-    
-    db.commit()
+        db.commit()
     
     if payload.order_items:
         # Create order items
@@ -289,56 +341,44 @@ async def update_order(
                 InventoryService.check_and_update_inventory(
                     db=db,
                     quantity_to_update=difference_in_quantity,
-                    product_id=item.product_id
+                    product_id=item.product_id,
+                    operation='remove'
                 )
                 
             except HTTPException as e:
                 order.status = "failed"
                 db.commit()
+                
+                # TODO: Send telex notification
                 raise e
-            
     
-    # Create invoice for order
+    # if (order.status == 'pending') and (payload.status == order_schemas.OrderStatus.accepted):
     if payload.status == order_schemas.OrderStatus.accepted:
-        # Check if there is an existing invoice for the order
-        existing_invoice = Invoice.fetch_one_by_field(
-            db=db, throw_error=False,
-            organization_id=organization_id,
-            order_id=order.id,
-        )
-        if existing_invoice:
-            # Remove the invoice
-            db.delete(existing_invoice)
-            db.commit()
-        
-        invoice = Invoice.create(
+        # Generate order invoice
+        InvoiceService.generate_order_invoice(
             db=db,
             organization_id=organization_id,
             order_id=order.id,
-            customer_id=order.customer_id if order.customer_id else None,
-            subtotal=order.total_amount
+            currency_code=order.currency_code
         )
         
-        order.invoice_id = invoice.id
+        # Get vendor ids from product in order items
+        vendor_ids = [item.product.vendor_id for item in order.items]
+        logger.info(vendor_ids)
+        
+        for v_id in vendor_ids:
+            # Send notification to vendor
+            OrderService.send_order_notification(
+                bg_tasks=bg_tasks,
+                db=db,
+                order=order,
+                to='vendor',
+                vendor_id=v_id,
+                organization_id=organization_id
+            )
     
-        # TODO: Send notification to vendor
-        
-        # OrderService.send_order_notification(
-        #     bg_tasks=bg_tasks,
-        #     db=db,
-        #     order=order,
-        #     to='vendor'
-        # )
-        
-        OrderService.send_order_notification(
-            bg_tasks=bg_tasks,
-            db=db,
-            order=order,
-            to='customer'
-        )
-        
-        db.commit()
-        
+    # if (order.status == 'accepted') and (payload.status == order_schemas.OrderStatus.paid):
+    if payload.status == order_schemas.OrderStatus.paid:
         # Create sale for the order items
         for item in order.items:
             Sale.create(
@@ -355,14 +395,23 @@ async def update_order(
                 vendor_id=item.product.vendor_id if item.product.vendor_id else None
             )
             
-            # TODO: Send invoice to customer and vendor if there is one
-
+    if payload.status not in ['draft', 'pending']:
+        # Send order notification to customer
+        OrderService.send_order_notification(
+            bg_tasks=bg_tasks,
+            db=db,
+            order=order,
+            to='customer',
+            organization_id=organization_id
+        )
+    
     logger.info(f'Order with id {order.id} updated')
     
+    # pprint(order.to_dict())
     return success_response(
         message=f"Order updated successfully",
         status_code=200,
-        data=order.to_dict()
+        # data=order.to_dict()
     )
 
 

@@ -72,7 +72,7 @@ PRODUCT_AND_SALES_PERMS = [
     "inventory:create", "inventory:update", "inventory:delete",
     "price:create", "price:update", "price:delete",
     "vendor:create", "vendor:update", "vendor:delete",
-    "customer:create", "customer:update", "customer:delete",
+    "customer:create", "customer:update", "customer:delete", "customer:create-bulk",
 ]
 
 CATEGORY_PERMS = [
@@ -84,6 +84,7 @@ FINANCIAL_PERMS = [
     "invoice:create", "invoice:update", "invoice:delete",
     "refund:create", "refund:update", "refund:delete",
     "payment:create", "payment:update", "payment:delete",
+    "receipt:create", "receipt:update", "receipt:delete",
 ]
 
 # Combined permission groups

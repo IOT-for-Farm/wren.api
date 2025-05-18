@@ -1,9 +1,11 @@
 import os
 from datetime import datetime
 from pprint import pprint
+import tempfile
 from typing import List, Optional
 from jinja2 import Template as Jinja2Templates
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+import pdfkit
 
 from api.utils.loggers import create_logger
 from api.utils.settings import settings
@@ -11,6 +13,40 @@ from config import config
 
 
 logger = create_logger(__name__, log_file='logs/email.log')
+
+
+def generate_pdf_from_html(html: str):
+    
+    try:
+        logger.info("Generating PDF from HTML...")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_pdf:
+            pdfkit.from_string(html, tmp_pdf.name)
+            pdf_path = tmp_pdf.name
+            logger.info(f"PDF generated at {pdf_path}")
+            
+            return pdf_path
+            
+    except Exception as pdf_error:
+        logger.error(f"Failed to generate PDF: {pdf_error}")
+        raise
+
+
+def get_html_from_template(template_name: str):
+    
+    try:
+        logger.info(f"Extracting HTML from template file {template_name}")
+        
+        file_path = f"{os.path.join("templates/email")}/{template_name}"
+        
+        with open(file_path, 'r') as html_file:
+            html = html_file.read()
+        
+        return html
+            
+    except Exception as error:
+        logger.error(f"Failed to extract HTML: {error}")
+        raise
+    
 
 async def send_email(
     recipients: List[str], 
@@ -69,57 +105,73 @@ async def send_email(
         } if apply_default_template_data else template_data
         
         logger.info('Template context built')
-        # logger.info(template_context)
-        pprint(template_context)
+        logger.info(template_context)
+        # pprint(template_context)
         
         if template_name:
-            if attachments:
-                message = MessageSchema(
-                    subject=subject,
-                    recipients=recipients,
-                    template_body=template_context,
-                    subtype=MessageType.html,
-                    attachments=attachments,
-                )
-            else:
-                message = MessageSchema(
-                    subject=subject,
-                    recipients=recipients,
-                    template_body=template_context,
-                    subtype=MessageType.html
-                )
+            html = get_html_from_template(template_name)
+            jinja_template = Jinja2Templates(html)
+            rendered_html = jinja_template.render(template_context)
+            
+            # if add_pdf_attachment:
+                # Get html string from file
+                
+                # pdf_path = generate_pdf_from_html(rendered_html)
+                # attachments = attachments or []
+                # attachments.append(pdf_path)
+                
+            # if attachments:
+            #     message = MessageSchema(
+            #         subject=subject,
+            #         recipients=recipients,
+            #         template_body=template_context,
+            #         subtype=MessageType.html,
+            #         attachments=attachments,
+            #     )
+            # else:
+            #     message = MessageSchema(
+            #         subject=subject,
+            #         recipients=recipients,
+            #         template_body=template_context,
+            #         subtype=MessageType.html
+            #     )
         
         if html_template_string:
             jinja_template = Jinja2Templates(html_template_string)
             rendered_html = jinja_template.render(template_context)
             
-            if attachments:
-                message = MessageSchema(
-                    subject=subject,
-                    recipients=recipients,
-                    body=rendered_html,
-                    subtype=MessageType.html,
-                    attachments=attachments,
-                )
-            else:
-                message = MessageSchema(
-                    subject=subject,
-                    recipients=recipients,
-                    body=rendered_html,
-                    subtype=MessageType.html
-                )
+        if add_pdf_attachment:
+            pdf_path = generate_pdf_from_html(rendered_html)
+            attachments = attachments or []
+            attachments.append(pdf_path)
+        
+        if attachments:
+            message = MessageSchema(
+                subject=subject,
+                recipients=recipients,
+                body=rendered_html,
+                subtype=MessageType.html,
+                attachments=attachments,
+            )
+        else:
+            message = MessageSchema(
+                subject=subject,
+                recipients=recipients,
+                body=rendered_html,
+                subtype=MessageType.html
+            )
             
         logger.info('Message schema set up')
         
         fm = FastMail(conf)
         
-        if template_name:
-            logger.info(f'Sending mail from template `{template_name}`')
-            await fm.send_message(message, template_name)
+        # if template_name:
+        #     logger.info(f'Sending mail from template `{template_name}`')
+        #     await fm.send_message(message, template_name)
             
-        if html_template_string:
-            logger.info(f'Sending mail with html body')
-            await fm.send_message(message)
+        # if html_template_string:
+        logger.info(f'Sending mail')
+        await fm.send_message(message)
         
         logger.info(f"Email sent to {','.join(recipients)}")
 

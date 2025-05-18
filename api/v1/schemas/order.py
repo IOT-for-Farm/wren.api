@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from typing import List, Optional
 
 from api.v1.schemas.base import AdditionalInfoSchema
@@ -12,6 +12,7 @@ class OrderStatus(str, Enum):
     accepted = 'accepted'
     paid = 'paid'
     failed = 'failed'
+    rejected = 'rejected'
     
     
 class OrderItemBase(BaseModel):
@@ -80,3 +81,12 @@ class UpdateOrder(BaseModel):
     order_items: Optional[List[OrderItemBase]] = None
     additional_info: Optional[List[AdditionalInfoSchema]] = None
     additional_info_keys_to_remove: Optional[List[str]] = None
+    rejection_reason: Optional[str] = None
+    
+    @model_validator(mode='after')
+    def validate_status_with_rejection_reasonn(self):
+        if self.status and self.status == OrderStatus.rejected:
+            if self.rejection_reason is None:
+                raise ValueError('Rejection reason must be provided')
+        
+        return self

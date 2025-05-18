@@ -146,8 +146,13 @@ async def http_exception(request: Request, exc: HTTPException):
 async def validation_exception(request: Request, exc: RequestValidationError):
     """Validation exception handler"""
 
+    # errors = [
+    #     {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+    #     for error in exc.errors()
+    # ]
+    
     errors = [
-        {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+        error["msg"].split(',')[-1].strip()
         for error in exc.errors()
     ]
 
@@ -164,24 +169,6 @@ async def validation_exception(request: Request, exc: RequestValidationError):
             "errors": errors,
         },
     )
-    
-
-# @app.exception_handler(UniqueViolation)
-# async def unique_violation_exception(request: Request, exc: UniqueViolation):
-#     """Unique key error exception handlers"""
-
-#     exc_type, exc_obj, exc_tb = sys.exc_info()
-#     logger.error(f"Integrity error occured | {request.url.path} | 500", stacklevel=2)
-#     logger.error(f"[ERROR] - An error occured | {exc}\n{exc_type}\n{exc_obj}\nLine {exc_tb.tb_lineno}", stacklevel=2)
-
-#     return JSONResponse(
-#         status_code=500,
-#         content={
-#             "status": False,
-#             "status_code": 500,
-#             "message": f"{exc}",
-#         },
-#     )
 
 
 @app.exception_handler(IntegrityError)

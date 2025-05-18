@@ -6,8 +6,10 @@ from api.utils.loggers import create_logger
 from api.v1.models.customer import Customer
 from api.v1.models.invoice import Invoice
 from api.v1.models.order import Order
+from api.v1.models.organization import Organization
 from api.v1.models.vendor import Vendor
 from api.v1.schemas import order as order_schemas
+from api.v1.services.organization import OrganizationService
 
 
 logger = create_logger(__name__)
@@ -19,13 +21,12 @@ class OrderService:
         cls, 
         bg_tasks: BackgroundTasks,
         db: Session, 
+        organization_id: str,
         order: Order, 
+        vendor_id: str = None,  # since vendor is not part of the order. if empty, it will send to organization
         to: str = 'vendor'
     ):
         '''Function to send order notification to vendor or customer'''
-        
-        # Get invoice from order
-        invoice = Invoice.fetch_by_id(db, order.invoice_id)
         
         if to == 'customer':
             if order.customer_id:
@@ -48,10 +49,42 @@ class OrderService:
             order_items = order.items
         
         elif to == 'vendor':
-            if not invoice.vendor_id:
-                raise HTTPException(400, "This invoice is not attached to a vendor")
+            if not vendor_id:
+                organization = Organization.fetch_by_id(db, organization_id)
+                
+                # Get order items that belong to the organization
+                order_items = [
+                    item for item in order.items 
+                    if item.product.vendor_id is None
+                    and item.product.organization_id == organization_id
+                ]
+                
+                # Check if order items  has content before sending email to organization
+                if len(order_items) == 0:
+                    return
+                
+                # Send notification to organization members as it is an organization product
+                OrganizationService.send_email_to_organization(
+                    db=db,
+                    bg_tasks=bg_tasks,
+                    organization_id=organization_id,
+                    subject='Order notification',
+                    template_name='order-notification.html',
+                    context={
+                        'business_partner': None,
+                        'organization': organization.to_dict(),
+                        'order': order.to_dict(),
+                        'order_items': [
+                            {
+                                **item.to_dict(excludes=['product']),
+                                'product': item.product.to_dict()
+                            } for item in order_items
+                        ]
+                    }
+                )
+                return
             
-            vendor = Vendor.fetch_one_by_field(db, business_partner_id=invoice.vendor_id)
+            vendor = Vendor.fetch_one_by_field(db, business_partner_id=vendor_id)
             business_partner = vendor.business_partner.to_dict()
             email_to_notify = business_partner['email']
             
@@ -68,6 +101,7 @@ class OrderService:
             template_name='order-notification.html',
             subject='Order notification',
             template_data={
+                'organization': None,
                 'business_partner': business_partner,
                 'order': order.to_dict(),
                 'order_items': [

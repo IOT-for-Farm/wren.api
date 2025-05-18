@@ -2,7 +2,7 @@ from datetime import timedelta
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from api.core.dependencies.celery.worker import send_telex_notification
+from api.core.dependencies.celery.queues.general.tasks import send_telex_notification
 from config import config
 
 from api.db.database import get_db

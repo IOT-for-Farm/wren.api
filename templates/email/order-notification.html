@@ -17,6 +17,7 @@
             </tr>
 
             <!-- Customer Info -->
+            {% if business_partner %}
             <tr valign="top">
               <td style="padding: 0 20px;">
                 <p style="margin: 0 0 5px;">Hello {{ business_partner.first_name }},</p>
@@ -27,6 +28,16 @@
                 {% endif %}
               </td>
             </tr>
+            {% endif %}
+
+            {% if organization %}
+            <tr valign="top">
+              <td style="padding: 0 20px;">
+                <p style="margin: 0 0 5px;">Hello {{ organization.name }},</p>
+                <p style="margin: 0 0 15px;">You have a new order:</p>
+              </td>
+            </tr>
+            {% endif %}
 
             <!-- Order Summary -->
             <tr valign="top">
@@ -61,10 +72,29 @@
                       {% endif %}
                     </tr>
                     {% endfor %}
+
+                    {% if business_partner.partner_type == "customer" %}
                     <tr>
                       <td colspan="3" align="right" style="border: 1px solid #ECF0F1; font-weight: bold;">Subtotal</td>
                       <td align="right" style="border: 1px solid #ECF0F1; font-weight: bold;">{{ order.total_amount }} {{ order.currency_code }}</td>
                     </tr>
+                    {% elif organization %}
+                    <tr></tr>
+                    {% else %}
+                    <tr></tr>
+                    {% endif %}
+
+                    {% if order.status == "pending" %}
+                    <tr>
+                      <td>
+                        <a href="#">Accept order</a>
+                      </td>
+
+                      <td>
+                        <a href="#">Reject order</a>
+                      </td>
+                    </tr>
+                    {% endif %}
                   </tbody>
                 </table>
               </td>

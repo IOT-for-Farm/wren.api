@@ -7,9 +7,9 @@ def batch_process_query(
     model: Type[Any],
     batch_size: int = 200,
     query: Optional[Select] = None,
-    order_by_column: Optional[Any] = None,
-    start_from: Optional[Any] = None
-) -> Generator[list[Any], None, None]:
+    # order_by_column: Optional[Any] = None,
+    # start_from: Optional[Any] = None
+):
     """
     Process database records in batches to avoid memory overload.
     
@@ -32,15 +32,17 @@ def batch_process_query(
     if query is None:
         query = db.query(model)
     
-    if order_by_column is None:
-        order_by_column = getattr(model, 'id')  # Default to id column if exists
+    # if order_by_column is None:
+        # order_by_column = getattr(model, 'id')  # Default to id column if exists
+    # order_by_column = getattr(model, 'updated_at')
     
-    if start_from is not None:
-        query = query.filter(order_by_column > start_from)
+    # if start_from is not None:
+    #     query = query.filter(order_by_column > start_from)
     
-    query = query.order_by(order_by_column)
+    # query = query.order_by(order_by_column)
     
-    last_id = None
+    # last_id = None
+    last_updated = None
     
     while True:
         # Get a batch of records
@@ -51,6 +53,8 @@ def batch_process_query(
             
         yield batch
         
+        # last_id = getattr(batch[-1], order_by_column.name)
+        
         # Update the query to get the next batch
-        last_id = getattr(batch[-1], order_by_column.name)
-        query = query.filter(order_by_column > last_id)
+        last_updated = getattr(batch[-1], 'updated_at')
+        query = query.filter(model.updated_at < last_updated)

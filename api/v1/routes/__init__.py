@@ -25,9 +25,11 @@ from api.v1.routes.inventory import inventory_router
 from api.v1.routes.invoice import invoice_router
 from api.v1.routes.order import order_router
 from api.v1.routes.sale import sale_router
+from api.v1.routes.receipt import receipt_router
 from api.v1.routes.account import account_router
 from api.v1.routes.payment import payment_router
 from api.v1.routes.price import price_router
+from api.v1.routes.refund import refund_router
 from api.v1.routes.product_variant import product_variant_router
 from api.v1.routes.business_partner import business_partner_router
 
@@ -54,6 +56,8 @@ v1_router.include_router(order_router)
 v1_router.include_router(sale_router)
 v1_router.include_router(account_router)
 v1_router.include_router(payment_router)
+v1_router.include_router(receipt_router)
+v1_router.include_router(refund_router)
 v1_router.include_router(template_router)
 v1_router.include_router(layout_router)
 v1_router.include_router(file_router)

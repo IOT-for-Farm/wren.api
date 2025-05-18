@@ -27,7 +27,8 @@ class Order(BaseTableModel):
     
     additional_info = sa.Column(sa.JSON, default={})
     
-    items = relationship('OrderItem', back_populates='order', lazy='selectin')
+    items = relationship('OrderItem', backref='order', lazy='selectin')
+    # items = relationship('OrderItem', backref='order')
     # invoice = relationship('Invoice', back_populates='order', foreign_keys=[invoice_id], uselist=False)
     customer = relationship(
         'Customer',
@@ -65,4 +66,4 @@ class OrderItem(BaseTableModel):
     quantity = sa.Column(sa.Integer)
     
     product = relationship('Product', backref='product_orders', uselist=False, lazy='selectin')
-    order = relationship('Order', back_populates='items')
+    # order = relationship('Order', back_populates='items')

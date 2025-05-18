@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -21,9 +22,21 @@ logger = create_logger(__name__)
 async def create_payment(
     payload: payment_schemas.PaymentBase,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to create a new payment"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='payment:create',
+        organization_id=payload.organization_id
+    )
+    
+    if not payload.unique_id:
+        payload.unique_id = helpers.generate_unique_id(
+            db=db, 
+            organization_id=payload.organization_id,
+        )
 
     payment = Payment.create(
         db=db,
@@ -39,26 +52,46 @@ async def create_payment(
 
 @payment_router.get("", status_code=200)
 async def get_payments(
-    search: str = None,
+    organization_id: str,
+    unique_id: str = None,
+    invoice_id: str = None,
+    status: str = None,
+    method: str = None,
+    payment_date: datetime = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
     order: str = 'desc',
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get all payments"""
+    
+    AuthService.belongs_to_organization(
+        db=db, entity=entity,
+        organization_id=organization_id
+    )
 
-    query, payments, count = Payment.all(
+    query, payments, count = Payment.fetch_by_field(
         db, 
         sort_by=sort_by,
         order=order.lower(),
         page=page,
         per_page=per_page,
         search_fields={
-            # 'email': search,
+            'unique_id': unique_id,
         },
+        organization_id=organization_id,
+        status=status,
+        method=method,
+        invoice_id=invoice_id,
     )
+    
+    if payment_date:
+        query = query.filter(Payment.payment_date >= payment_date)
+    
+        payments = query.all()
+        count = query.count()
     
     return paginator.build_paginated_response(
         items=[payment.to_dict() for payment in payments],
@@ -72,11 +105,17 @@ async def get_payments(
 @payment_router.get("/{id}", status_code=200, response_model=success_response)
 async def get_payment_by_id(
     id: str,
+    organization_id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to get a payment by ID or unique_id in case ID fails."""
 
+    AuthService.belongs_to_organization(
+        db=db, entity=entity,
+        organization_id=organization_id
+    )
+    
     payment = Payment.fetch_by_id(db, id)
     
     return success_response(
@@ -89,11 +128,23 @@ async def get_payment_by_id(
 @payment_router.patch("/{id}", status_code=200, response_model=success_response)
 async def update_payment(
     id: str,
+    organization_id: str,
     payload: payment_schemas.UpdatePayment,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to update a payment"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='payment:update',
+        organization_id=organization_id
+    )
+    
+    payment = Payment.fetch_by_id(db, id)
+    
+    if payment.status in ['failed', 'cancelled']:
+        raise HTTPException(400, f'Cannot make update to a {payment.status} payment')
 
     payment = Payment.update(
         db=db,
@@ -111,10 +162,17 @@ async def update_payment(
 @payment_router.delete("/{id}", status_code=200, response_model=success_response)
 async def delete_payment(
     id: str,
+    organization_id: str,
     db: Session=Depends(get_db), 
-    entity: AuthenticatedEntity=Depends(AuthService.get_current_user_entity)
+    entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
     """Endpoint to delete a payment"""
+    
+    AuthService.has_org_permission(
+        db=db, entity=entity,
+        permission='payment:delete',
+        organization_id=organization_id
+    )
 
     Payment.soft_delete(db, id)
 

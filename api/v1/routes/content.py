@@ -6,7 +6,7 @@ from slugify import slugify
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from api.core.dependencies.celery.worker import generate_content_translations
+from api.core.dependencies.celery.queues.general.tasks import generate_content_translations
 from api.db.database import get_db
 from api.utils import paginator, helpers
 from api.utils.responses import success_response

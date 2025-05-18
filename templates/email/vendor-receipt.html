@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vendor Invoice Receipt</title>
+</head>
+<body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-collapse:collapse; border:1px solid #ddd;">
+                    <tr>
+                        <td style="background-color:#2c3e50; color:#ffffff; padding:20px; text-align:center;">
+                            <h2 style="margin:0;">{{ business_partner.company_name }} Invoice Payment Receipt</h2>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 20px;">
+                            <p style="margin: 0 0 5px;">Hello {{ business_partner.first_name }},</p>
+                            <p style="margin: 0 0 15px;">Thank you for your payment. Here is your receipt:</p>
+                        </td>
+                    </tr>
+
+                    <!-- Summary Section -->
+                    <tr>
+                        <td style="padding:20px;">
+                            <h3 style="margin:0 0 10px 0;">Invoice Summary</h3>
+                            <table width="100%" cellpadding="5" cellspacing="0" border="0">
+                                <tr>
+                                    <td><strong>Total Items Sold:</strong></td>
+                                    <td>{{ sale_data.total_items_sold }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Sales Transactions:</strong></td>
+                                    <td>{{ sale_data.total_sales }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Sales Amount:</strong></td>
+                                    <td>{{ "%.2f"|format(sale_data.total_price) }} <strong>{{sale_data.currency_code}}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Profit:</strong></td>
+                                    <td>{{ "%.2f"|format(sale_data.total_profit) }} <strong>{{sale_data.currency_code}}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Commission Owed:</strong></td>
+                                    <td>{{ "%.2f"|format(sale_data.total_commission_owed) }} <strong>{{sale_data.currency_code}}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Commission Percentage:</strong></td>
+                                    <td>{{ sale_data.commission_percentage }}%</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Sales Table -->
+                    <tr>
+                        <td style="padding: 0 20px 20px 20px;">
+                            <h3 style="margin-bottom: 10px;">Sales Breakdown</h3>
+                            <table width="100%" cellpadding="5" cellspacing="0" border="1" style="border-collapse: collapse; font-size:14px;">
+                                <thead style="background-color:#ecf0f1;">
+                                    <tr>
+                                        <th align="left">Product</th>
+                                        <th align="left">Unit Price ({{sale_data.currency_code}} )</th>
+                                        <th align="left">Quantity</th>
+                                        <th align="left">Date Sold</th>
+                                        <th align="left">Total Price ({{sale_data.currency_code}} )</th>
+                                        <th align="left">Profit ({{sale_data.currency_code}} )</th>
+                                        <th align="left">Commission ({{sale_data.currency_code}} )</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in sale_data.product_sale_data %}
+                                    <tr>
+                                        <td>{{ sale.product_name }}</td>
+                                        <td>{{ "%.2f"|format(sale.price) }}</td>
+                                        <td>{{ sale.quantity_sold }}</td>
+                                        <td>{{ sale.date_sold.strftime("%Y-%m-%d") if sale.date_sold else "" }}</td>
+                                        <td>{{ "%.2f"|format(sale.total_price_of_sale) }}</td>
+                                        <td>{{ "%.2f"|format(sale.profit_on_sale) }}</td>
+                                        <td>{{ "%.2f"|format(sale.commission_owed_on_sale) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 20px; background-color:#f9f9f9; font-size:12px; color:#7f8c8d; text-align:center;">
+                            This receipt confirms that your vendor invoice has been paid in full.<br>
+                            For questions, contact us at <a href="mailto:support@example.com">support@example.com</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
