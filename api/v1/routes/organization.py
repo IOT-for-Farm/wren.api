@@ -122,7 +122,8 @@ async def get_user_organizations(
     return success_response(
         status_code=200,
         message='User organizations fetched successfully',
-        data=[organization.to_dict() for organization in organizations],
+        # data=[organization.to_dict() for organization in organizations],
+        data=organizations,
     )
     
 
@@ -276,10 +277,21 @@ async def get_organization_by_slug(
         db=db
     )
     
+    current_logged_in_member = None
+    if entity.type == 'user':
+        current_logged_in_member = OrganizationMember.fetch_one_by_field(
+            db=db,
+            user_id=entity.entity.id,
+            organization_id=organization.id
+        )
+        
     return success_response(
         message=f"Fetched organization successfully",
         status_code=200,
-        data=organization.to_dict()
+        data={
+            **organization.to_dict(),
+            "current_user_role": current_logged_in_member.role.role_name if current_logged_in_member else None
+        }
     )
     
 
@@ -304,10 +316,21 @@ async def get_organization_by_id(
 
     organization = Organization.fetch_by_id(db, id)
     
+    current_logged_in_member = None
+    if entity.type == 'user':
+        current_logged_in_member = OrganizationMember.fetch_one_by_field(
+            db=db,
+            user_id=entity.entity.id,
+            organization_id=organization.id
+        )
+    
     return success_response(
         message=f"Fetched organization successfully",
         status_code=200,
-        data=organization.to_dict()
+        data={
+            **organization.to_dict(),
+            "current_user_role": current_logged_in_member.role.role_name if current_logged_in_member else None
+        }
     )
 
 

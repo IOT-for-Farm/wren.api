@@ -1,7 +1,9 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship, Session, validates
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from api.core.base.base_model import BaseTableModel
+from api.db.database import get_db_with_ctx_manager
 
 class Organization(BaseTableModel):
     __tablename__ = "organizations"
@@ -48,15 +50,23 @@ class Organization(BaseTableModel):
         primaryjoin="and_(Organization.id == foreign(OrganizationRole.organization_id), OrganizationRole.is_deleted == False)",  # add Organization.id=='-1' for default roles to show
         lazy="selectin"
     )
-    # members = relationship(
-    #     "User",
-    #     primaryjoin="User.id == foreign(OrganizationMember.user_id)",
-    #     backref="user_members", 
-    #     lazy='selectin'
-    # )
-    # departments = relationship("Department", back_populates="organization")
-    # billing = relationship("BillingAccount", back_populates="organization")
-    # custom_fields = relationship("OrganizationCustomField", back_populates="organization")
+    
+    @hybrid_property
+    def member_count(self):
+        with get_db_with_ctx_manager() as db:
+            _, _, count = OrganizationMember.fetch_by_field(
+                db=db, paginate=False,
+                organization_id=self.id
+            )
+            
+            return count
+    
+    def to_dict(self, excludes = []):
+        return {
+            "member_count": self.member_count,
+            **super().to_dict(excludes),
+            # "creator": self.creator.to_dict()
+        }
     
 
 class OrganizationMember(BaseTableModel):
@@ -112,17 +122,10 @@ class OrganizationInvite(BaseTableModel):
     def to_dict(self, excludes = ...):
         return super().to_dict(excludes=['invite_token'])
 
-# class OrganizationCustomField(BaseTableModel):
-#     __tablename__ = "organization_custom_fields"
+
+class OrganizationSecret(BaseTableModel):
+    __tablename__ = "organization_secrets"
     
-#     organization_id = sa.Column(sa.String, sa.ForeignKey("organizations.id"))
-#     field_name = sa.Column(sa.String(50), nullable=False)
-#     field_type = sa.Column(sa.ENUM(
-#         'text', 'number', 'date', 'boolean', 'dropdown', 
-#         name="custom_field_type"
-#     ), nullable=False)
-#     field_value = sa.Column(sa.JSON)  # Flexible storage based on type
-#     is_required = sa.Column(sa.Boolean, server_default='false')
-    
-#     # Relationships
-#     organization = relationship("Organization", back_populates="custom_fields")
+    organization_id = sa.Column(sa.String, sa.ForeignKey('organizations.id'), nullable=False)
+    key = sa.Column(sa.String, nullable=False)
+    value = sa.Column(sa.Text, nullable=False)

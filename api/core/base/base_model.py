@@ -173,7 +173,7 @@ class BaseTableModel(Base):
             
         # Handle pagination
         offset = (page - 1) * per_page
-        if paginate:
+        if not paginate:
             return query, query.all(), count
         else:
             return query, query.offset(offset).limit(per_page).all(), count
@@ -195,7 +195,7 @@ class BaseTableModel(Base):
 
     @classmethod
     def soft_delete(cls, db: Session, id: str):
-        """Performs a soft delete by setting is_deleted to the current timestamp"""
+        """Performs a soft delete by setting is_deleted to True"""
         
         obj = db.query(cls).filter_by(id=id, is_deleted=False).first()
         if obj is None:

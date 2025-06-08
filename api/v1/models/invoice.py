@@ -88,7 +88,7 @@ class Invoice(BaseTableModel):
     def is_overdue(self):
         '''Check if invoice is over due'''
         
-        if self.due_date:
+        if self.due_date and not self.payment_complete:
             return self.due_date <= dt.datetime.now()
         
         return False

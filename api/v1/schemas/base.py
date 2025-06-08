@@ -21,7 +21,8 @@ from api.v1.models import *
 
 class AdditionalInfoSchema(BaseModel):
     key: str
-    value: Any    
+    value: Any
+        
     
 class DeleteMultiple(BaseModel):
     ids: List[str]

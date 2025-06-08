@@ -19,6 +19,7 @@ from api.utils.loggers import create_logger
 from api.utils.log_streamer import log_streamer
 from api.utils.responses import success_response
 from api.utils.telex_notification import TelexNotification
+from api.v1.models import register_model_hooks
 from api.v1.routes import v1_router
 from api.utils.settings import settings
 
@@ -30,6 +31,7 @@ logger = create_logger(__name__, log_file='logs/error.log')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    register_model_hooks()
     yield
 
 app = FastAPI(
@@ -55,7 +57,8 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 app.add_middleware(
     CORSMiddleware,
     # allow_origins=settings.ALLOWED_ORIGINS,
-    allow_origins=[origin.strip() for origin in config('ALLOWED_ORIGINS').split(',')],
+    # allow_origins=[origin.strip() for origin in config('ALLOWED_ORIGINS').split(',')],
+    allow_origins=['*'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,11 +119,11 @@ async def root(request: Request) -> dict:
 @app.get("/logs", tags=["Home"])
 async def stream_logs(
     lines: Optional[int] = Query(None), 
-    log_file: Optional[str] = Query('app_logs')
+    log_file: Optional[str] = Query('app_logs.log')
 ) -> StreamingResponse:
     '''Endpoint to stream logs'''
     
-    return StreamingResponse(log_streamer(f'logs/{log_file}.log', lines), media_type="text/event-stream")
+    return StreamingResponse(log_streamer(f'logs/{log_file}', lines), media_type="text/event-stream")
 
 
 # REGISTER EXCEPTION HANDLERS
@@ -146,15 +149,20 @@ async def http_exception(request: Request, exc: HTTPException):
 async def validation_exception(request: Request, exc: RequestValidationError):
     """Validation exception handler"""
 
+    errors = [
+        {
+            "loc": error["loc"], 
+            "msg": error["msg"], 
+            # "msg": error["msg"].split(',')[-1].strip(), 
+            "type": error["type"],
+            # "detailed_message": f"{error['type'].capitalize()} {error['loc'][0]}: {error['loc'][1]}- {error['msg'].split(',')[-1].strip()}"
+        } for error in exc.errors()
+    ]
+    
     # errors = [
-    #     {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+    #     f"{error['type'].capitalize()} {error['loc'][0]}: {error['loc'][1]}- {error['msg'].split(',')[-1].strip()}"
     #     for error in exc.errors()
     # ]
-    
-    errors = [
-        error["msg"].split(',')[-1].strip()
-        for error in exc.errors()
-    ]
 
     exc_type, exc_obj, exc_tb = sys.exc_info()
     logger.error(f"RequestValidationError: {request.url.path} | {errors}", stacklevel=2)

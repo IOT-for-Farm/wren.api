@@ -113,9 +113,8 @@ async def get_layouts(
             Layout.organization_id == None,
         )
     )
-    
-    count = query.count()
-    layouts = query.all()
+
+    layouts, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[layout.to_dict() for layout in layouts],

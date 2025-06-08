@@ -14,6 +14,7 @@ TASK_QUEUES = {
     'general': f'{ENV}_wren_general', 
     'email': f'{ENV}_wren_emails', 
     'invoice': f'{ENV}_wren_invoices', 
+    'scheduled': f'{ENV}_wren_scheduled', 
     # 'data_indexing': f'{ENV}_wren_data_indexing',
     # 'sms': f'{ENV}_wren_sms', 
     # 'import': f'{ENV}_wren_imports', 
@@ -28,6 +29,10 @@ SCHEDULED_BASE = 'api.core.dependencies.celery.queues.scheduled_tasks'
 beat_schedule = {
     'auto-publish-and-expire-content-every-minute': {
         'task': f'{SCHEDULED_BASE}.auto_publish_and_expire_content',
+        'schedule': crontab(minute='*/1'),  # every 1 minute
+    },
+    'send-event-reminders': {
+        'task': f'{SCHEDULED_BASE}.send_event_reminders',
         'schedule': crontab(minute='*/1'),  # every 1 minute
     },
 }
@@ -49,10 +54,3 @@ celery_app.autodiscover_tasks(
         for queue in list(TASK_QUEUES.keys())
     ]
 )
-
-# TODO: Write a function that checks through all inventories and takes the ones that have gone below or are approaching
-# their reorder threshold and send notification to the vendor or organization or both
-
-
-# TODO: Write a function that checks all invoices and marks those that have gone
-# past the due date as overdue and notify the respective owner of the invoice

@@ -62,6 +62,13 @@ class ProjectBase(BaseModel):
         if self.start_date and self.end_date:
             if self.end_date < self.start_date:
                 raise ValueError("End date cannot be before start date.")
+        
+        if not self.organization_id and not self.department_id:
+            raise ValueError('Both organization and department id cannot be empty')
+        
+        if self.organization_id and self.department_id:
+            raise ValueError('Both organization and department id cannot be provided')
+        
         return self
     
     class Config:

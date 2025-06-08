@@ -1,6 +1,8 @@
+from datetime import datetime
 from uuid import uuid4
 from fastapi import APIRouter, Depends, Form, HTTPException
 from slugify import slugify
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -134,6 +136,8 @@ async def get_projects(
     name: str = None,
     slug: str = None,
     status: str = None,
+    start_date: datetime = None,
+    end_date: datetime = None,
     page: int = 1,
     per_page: int = 10,
     sort_by: str = 'created_at',
@@ -172,6 +176,22 @@ async def get_projects(
         slug=slug,
         status=status
     )
+    
+    if start_date and not end_date:
+        query = query.filter(Project.start_date >= start_date)
+    
+    if end_date and not start_date:
+        query = query.filter(Project.end_date >= end_date)
+        
+    if start_date and end_date:
+        query = query.filter(
+            and_(
+                Project.end_date <= end_date,
+                Project.start_date >= start_date,
+            )
+        )
+    
+    projects, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[project.to_dict() for project in projects],

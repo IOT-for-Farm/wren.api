@@ -195,8 +195,7 @@ async def get_contents(
             .filter(Tag.name.in_(tags_list))
         )
         
-    count = query.count()    
-    contents = query.all()
+    contents, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[content.to_dict() for content in contents],

@@ -85,8 +85,7 @@ async def get_content_templates(
         )
     )
     
-    count = query.count()
-    content_templates = query.all()
+    content_templates, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[content_template.to_dict() for content_template in content_templates],

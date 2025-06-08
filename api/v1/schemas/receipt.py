@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 
 
 class ReceiptBase(BaseModel):
@@ -29,6 +29,7 @@ class GenerateReceipt(BaseModel):
     template_id: Optional[str] = None
     context: Optional[dict] = None
     send_notification: Optional[bool] = True
+    recipients: Optional[List[EmailStr]] = None
     
 
 class UpdateReceipt(BaseModel):

@@ -62,7 +62,7 @@ def build_model_paginated_response(
     page_number = 1 if page <= 0 else page
     
     # Build pagination items
-    query, data, count = model.all(
+    data, count = model.all(
         db,
         page=page_number,
         per_page=page_size,
@@ -72,27 +72,26 @@ def build_model_paginated_response(
     items = [item.to_dict(excludes=excludes) for item in data]
     
     if filters:
-        query, data, count = model.fetch_by_field(
+        data, count = model.fetch_by_field(
             db, 
             page=page,
             per_page=page_size,
             sort_by=sort_by,
             order=order,
-            search_fields=search_fields,
             **filters
         )
         items = [item.to_dict(excludes=excludes) for item in data]
     
-    # if search_fields:
-    #     query, data, count = model.search(
-    #         db,
-    #         page=page,
-    #         per_page=page_size,
-    #         sort_by=sort_by,
-    #         order=order,
-    #         search_fields=search_fields
-    #     )
-    #     items = [item.to_dict(excludes=excludes) for item in data]
+    if search_fields:
+        data, count = model.search(
+            db,
+            page=page,
+            per_page=page_size,
+            sort_by=sort_by,
+            order=order,
+            search_fields=search_fields
+        )
+        items = [item.to_dict(excludes=excludes) for item in data]
     
     # Generate total pages
     total_pages = (count // page_size) + 1 if count % page_size > 0 else (count // page_size)
@@ -106,13 +105,18 @@ def build_model_paginated_response(
     )
     
     response = {
-        "current_page": page_number,
-        "size": page_size,
-        "total": count,
-        "pages": total_pages,
-        "previous_page": pointers["previous"],
-        "next_page": pointers["next"],
-        "items": items,
+        "status_code": 200,
+        "success": True,
+        "message": "Items fetched successfully",
+        "pagination_data": {
+            "current_page": page_number,
+            "size": page_size,
+            "total": count,
+            "pages": total_pages,
+            "previous_page": pointers["previous"],
+            "next_page": pointers["next"],
+        },
+        "data": items,
     }
 
     return response
@@ -148,13 +152,24 @@ def build_paginated_response(
     )
     
     response = {
-        "current_page": page_number,
-        "size": page_size,
-        "total": total,
-        "pages": total_pages,
-        "previous_page": pointers["previous"],
-        "next_page": pointers["next"],
-        "items": items,
+        "status_code": 200,
+        "success": True,
+        "message": "Items fetched successfully",
+        "pagination_data": {
+            "current_page": page_number,
+            "size": page_size,
+            "total": total,
+            "pages": total_pages,
+            "previous_page": pointers["previous"],
+            "next_page": pointers["next"],
+        },
+        "data": items,
     }
 
     return response
+
+
+def paginate_query(query, page: int, per_page: int):
+    count = query.count()
+    offset = (page - 1) * per_page
+    return query.offset(offset).limit(per_page).all(), count

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
+from pydantic import EmailStr
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -31,7 +32,8 @@ class InvoiceService:
         currency_code: str = 'NGN',
         template_id: str = None,
         context: dict = None,
-        send_notification: bool = False
+        send_notification: bool = False,
+        recipients: Optional[List[EmailStr]] = None
     ):
         '''Fucntion to generate invoice for an order'''
         
@@ -96,9 +98,14 @@ Number of items in order: {len(order.items)}
                     template_id=template_id,
                     context=template_data
                 )
-                
+            
+            recipients = recipients if recipients else []
+            
+            # This will remove duplicate emails in case of a case where customer email is sent twice
+            recipients_to_send_to = list(set([order.customer.business_partner.email] + recipients))
+            
             send_email_celery.delay(
-                recipients=[order.customer.business_partner.email],
+                recipients=recipients_to_send_to,
                 subject=f'Invoice for your order #{order.unique_id}',
                 template_name='order-notification.html' if not template_id else None,
                 html_template_string=html if template_id else None,
@@ -123,6 +130,7 @@ Number of items in order: {len(order.items)}
         template_id: str = None,
         context: dict = None,
         send_notification: bool = True,
+        recipients: Optional[List[EmailStr]] = None
     ):
         '''Fucntion to generate an invice for a vendor based on sales over a 30 day period'''
         
@@ -215,9 +223,14 @@ Commission agreement: {vendor.commission_percentage}%""",
                     template_id=template_id,
                     context=template_data
                 )
-                
+            
+            recipients = recipients if recipients else []
+            
+            # This will remove duplicate emails in case of a case where vendor email is sent twice
+            recipients_to_send_to = list(set([vendor.business_partner.email] + recipients))
+            
             send_email_celery.delay(
-                recipients=[vendor.business_partner.email],
+                recipients=recipients_to_send_to,
                 subject=f'Invoice for the month of {month_str} {year}',
                 template_name='vendor-invoice.html' if not template_id else None,
                 html_template_string=html if template_id else None,

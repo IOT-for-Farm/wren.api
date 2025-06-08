@@ -40,6 +40,7 @@ async def create_receipt(
         template_id=payload.template_id,
         context=payload.context,
         transaction_reference=payload.transaction_reference,
+        recipients=payload.recipients,
     )
 
     logger.info(f'Receipt with id {receipt.id} created')

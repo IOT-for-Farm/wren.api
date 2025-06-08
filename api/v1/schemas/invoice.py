@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import List, Optional
 
 
 class InvoiceStatus(str, Enum):
@@ -27,6 +27,12 @@ class InvoiceBase(BaseModel):
     due_date: Optional[datetime] = None
     # status: Optional[InvoiceStatus] = InvoiceStatus.pending
     
+    @field_validator("due_date")
+    def validate_end_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date cannot be in the past.")
+        return v
+    
 
 class GenerateInvoice(InvoiceBase):
     
@@ -45,6 +51,7 @@ class GenerateInvoice(InvoiceBase):
     send_notification: Optional[bool] = False
     template_id: Optional[str] = None
     context: Optional[dict] = None
+    recipients: Optional[List[EmailStr]] = None
 
 
 class UpdateInvoice(BaseModel):

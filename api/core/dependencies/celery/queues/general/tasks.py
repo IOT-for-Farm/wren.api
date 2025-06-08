@@ -1,8 +1,11 @@
 import asyncio
 
+from celery import shared_task
+
 from api.db.database import get_db_with_ctx_manager
 from api.utils.language_codes import LANGUAGE_CODES
 from api.utils.telex_notification import TelexNotification
+from api.v1.models.activity_log import ActivityLog
 from api.v1.models.content import Content, ContentTranslation
 from api.utils import helpers
 from api.utils.batch_process_query import batch_process_query
@@ -83,3 +86,15 @@ def generate_content_translations(content: dict):
                 )
                 
                 task_logger.info(f'Translation for content {content["title"]} with langauge code `{code}` saved to the database')
+
+
+@celery_app.task(name='worker.save_activity_log', queue=TASK_QUEUES['general'])
+def save_activity_log(data: dict):
+    
+    with get_db_with_ctx_manager() as db:
+        task_logger.info('Saving activity log')
+        task_logger.info(data)
+        
+        ActivityLog.create(db=db, **data)
+        
+        task_logger.info('Activity log saved')

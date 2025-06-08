@@ -43,6 +43,8 @@ async def create_payment(
         **payload.model_dump(exclude_unset=True)
     )
 
+    logger.info(f"payment with id {payment.id} created successfully")
+    
     return success_response(
         message=f"Payment created successfully",
         status_code=201,
@@ -89,9 +91,7 @@ async def get_payments(
     
     if payment_date:
         query = query.filter(Payment.payment_date >= payment_date)
-    
-        payments = query.all()
-        count = query.count()
+        payments, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[payment.to_dict() for payment in payments],

@@ -178,7 +178,7 @@ class OrganizationService:
         '''Function to get a users organizations'''
         
         query = (
-            db.query(Organization)
+            db.query(Organization, OrganizationMember)
             .join(OrganizationMember, OrganizationMember.organization_id == Organization.id)
             .join(User, User.id == OrganizationMember.user_id)
             .filter(
@@ -197,9 +197,15 @@ class OrganizationService:
         
         query = query.order_by(OrganizationMember.join_date.desc())
         
-        organizations = query.all()
+        # organizations = query.all()
+        result = [
+            {
+                "role": member.role.role_name,
+                "organization": organization.to_dict(),
+            } for organization, member in query.all()
+        ]
         
-        return organizations
+        return result
 
     
     @classmethod

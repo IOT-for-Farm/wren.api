@@ -15,7 +15,7 @@ class BusinessType(str, Enum):
     TRANSPORTATION = 'transportation'
     AGRICULTURE = 'agriculture'
     FINANCE = 'finance'
-    REAL_ESTATE = 'real_estate'
+    REAL_ESTATE = 'real estate'
     INFORMATION_TECHNOLOGY = 'information technology'
     TELECOMMUNICATIONS = 'telecommunications'
     ENTERTAINMENT = 'entertainment'

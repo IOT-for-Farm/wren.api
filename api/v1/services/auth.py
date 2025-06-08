@@ -5,9 +5,12 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from api.v1.models.customer import Customer
+from api.v1.models.vendor import Vendor
 from config import config
 
 from api.core.dependencies.email_sending_service import send_email
+from api.core.dependencies.context import current_user_id
 from api.db.database import get_db
 from api.utils.loggers import create_logger
 from api.utils.settings import settings
@@ -15,7 +18,7 @@ from api.v1.models.apikey import Apikey
 from api.v1.models.organization import Organization, OrganizationMember, OrganizationRole
 from api.v1.models.token import BlacklistedToken, Token, TokenType
 from api.v1.models.user import User
-from api.v1.schemas.auth import AuthenticatedEntity, EntityType
+from api.v1.schemas.auth import AuthenticatedEntity, EntityType, UserType
 from api.v1.schemas.token import TokenData
 from api.v1.services.token import TokenService
 
@@ -66,13 +69,14 @@ class AuthService:
         return pwd_context.verify(secret, hash)
     
     @classmethod
-    def create_access_token(cls, db: Session, user_id: str):
+    def create_access_token(cls, db: Session, user_id: str, user_type: UserType=UserType.user):
         
         # Check if user has a token already
         TokenService.check_and_revoke_existing_token(db, user_id=user_id, token_type=TokenType.ACCESS.value)
         
         encoded_jwt = TokenService.create_token(
             db=db,
+            user_type=user_type.value,
             token_type=TokenType.ACCESS.value,
             expiry_in_minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
             user_id=user_id
@@ -80,13 +84,14 @@ class AuthService:
         return encoded_jwt
 
     @classmethod
-    def create_refresh_token(cls, db: Session, user_id: str):
+    def create_refresh_token(cls, db: Session, user_id: str, user_type: UserType=UserType.user):
         
         # Check if user has a token already and it has not expired
         TokenService.check_and_revoke_existing_token(db, user_id=user_id, token_type=TokenType.REFRESH.value)
         
         encoded_jwt = TokenService.create_token(
             db=db,
+            user_type=user_type.value,
             token_type=TokenType.REFRESH.value,
             expiry_in_minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,
             user_id=user_id
@@ -105,35 +110,36 @@ class AuthService:
         )
         
         user_id = payload.get("user_id")
-        return user_id
+        user_type = payload.get("user_type")
+        return user_id, user_type
         
     
     @classmethod
     def verify_access_token(cls, db: Session, access_token: str, credentials_exception):
         """Funtcion to decode and verify access token"""
         
-        user_id = cls.verify_token(
+        user_id, user_type = cls.verify_token(
             db=db,
             token=access_token,
             expected_token_type=TokenType.ACCESS.value,
             credentials_exception=credentials_exception
         )
         
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(user_id=user_id, user_type=user_type)
         return token_data
 
     @classmethod
     def verify_refresh_token(cls, db: Session, refresh_token: str, credentials_exception):
         """Funtcion to decode and verify refresh token"""
         
-        user_id = cls.verify_token(
+        user_id, user_type = cls.verify_token(
             db=db,
             token=refresh_token,
             expected_token_type=TokenType.REFRESH.value,
             credentials_exception=credentials_exception
         )
         
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(user_id=user_id, user_type=user_type)
         return token_data
     
     @classmethod
@@ -210,7 +216,7 @@ class AuthService:
             status_code=401, detail="Invalid token"
         )
         
-        user_id = cls.verify_token(
+        user_id, _ = cls.verify_token(
             db=db,
             token=token,
             expected_token_type=TokenType.MAGIC.value,
@@ -253,7 +259,7 @@ class AuthService:
             subject='Password Reset',
             template_data={
                 'user': user,
-                'reset_utl': f"{config('AUTH_APP_URL')}/password-reset",
+                'reset_url': f"{config('AUTH_APP_URL')}/password-reset",
                 'token': password_reset_token,
                 'expiry_minutes': expiry_minutes
             }
@@ -269,7 +275,7 @@ class AuthService:
             status_code=401, detail="Invalid token"
         )
         
-        user_id = cls.verify_token(
+        user_id, _ = cls.verify_token(
             db=db,
             token=token,
             expected_token_type=TokenType.PASSWORD_RESET.value,
@@ -296,7 +302,7 @@ class AuthService:
         )
         
         if token:
-            user = cls._validate_token(db, token, credentials_exception)
+            user = cls._validate_token(db, credentials_exception, token)
             return AuthenticatedEntity(type=EntityType.USER, entity=user)
             
         if apikey:
@@ -318,7 +324,7 @@ class AuthService:
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-        user = cls._validate_token(db, token, credentials_exception)
+        user = cls._validate_token(db, credentials_exception, token)        
         # return user
         return AuthenticatedEntity(type=EntityType.USER, entity=user)
 
@@ -343,7 +349,12 @@ class AuthService:
         
     
     @classmethod
-    def _validate_token(cls, db: Session, token: HTTPAuthorizationCredentials, credentials_exception):
+    def _validate_token(
+        cls, 
+        db: Session, 
+        credentials_exception,
+        token: HTTPAuthorizationCredentials, 
+    ):
         '''THis function validates the access token'''
         
         try:
@@ -357,19 +368,42 @@ class AuthService:
                 credentials_exception=credentials_exception
             )
             
-            user = User.fetch_by_id(db, token_data.user_id)
+            if token_data.user_type == UserType.user.value:
+                user = User.fetch_by_id(db, token_data.user_id)
+                
+                if not user.is_active:
+                    raise HTTPException(403, "Account is inactive")
+                
+                current_user_id.set(user.id)
+                logger.info(current_user_id.get())
             
-            if not user.is_active:
-                raise HTTPException(403, "Account is inactive")
+            if token_data.user_type == UserType.vendor.value:
+                user = Vendor.fetch_one_by_field(
+                    db=db, throw_error=False,
+                    business_partner_id=token_data.user_id
+                )
+            
+            if token_data.user_type == UserType.customer.value:
+                user = Customer.fetch_one_by_field(
+                    db=db, throw_error=False,
+                    business_partner_id=token_data.user_id
+                )
+                
+            if not user:
+                raise credentials_exception
             
             return user
         
-        except AttributeError:
-            raise credentials_exception
+        except HTTPException as http_exc:
+            raise http_exc
+        
+        except AttributeError as attr_error:
+            logger.error(attr_error)
+            raise HTTPException(500, 'An error occured')
         
         except Exception as e:
             logger.error(e)
-            raise credentials_exception
+            raise HTTPException(500, 'An error occured')
     
     
     @classmethod
@@ -389,6 +423,9 @@ class AuthService:
                 apikey_obj.last_used_at = dt.datetime.now(dt.timezone.utc)
                 db.commit()
                 db.refresh(apikey_obj)
+                
+                # current_user_id.set(apikey_obj.user_id)
+                
                 return apikey_obj
             
             raise credentials_exception

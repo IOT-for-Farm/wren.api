@@ -130,8 +130,7 @@ async def get_templates(
             .filter(Tag.name.in_(tags_list))
         )
         
-    count = query.count()    
-    templates = query.all()
+    templates, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[template.to_dict() for template in templates],

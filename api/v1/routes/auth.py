@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -184,7 +185,11 @@ async def initiate_google_auth():
 
 
 @auth_router.get("/google/callback")
-async def google_callback(request: Request, db: Session = Depends(get_db)):
+async def google_callback(
+    request: Request, 
+    organization_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
     """Endpoint to handle Google OAuth callback
 
     Args:
@@ -194,7 +199,8 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
     
     user, access_token, refresh_token = GoogleOauthService.callback(
         db=db,
-        request=request
+        request=request,
+        organization_id=organization_id
     )
     
     response = success_response(
@@ -248,7 +254,9 @@ async def google_login(
     
     user, access_token, refresh_token = GoogleOauthService.authenticate(
         db=db,
-        id_token=token_request.id_token
+        id_token=token_request.id_token,
+        organization_id=token_request.organization_id,
+        user_type=token_request.user_type,
     )
     
     response = success_response(

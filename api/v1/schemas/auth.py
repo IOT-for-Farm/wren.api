@@ -62,9 +62,18 @@ class ResetPasswordRequest(EmailRequest):
 class ResetPassword(BaseModel):
     password: str
 
+
+class UserType(str, Enum):
+    
+    user = 'user'
+    customer = 'customer'
+    vendor = 'vendor'
+    
     
 class GoogleAuth(BaseModel):
     id_token: str
+    organization_id: Optional[str] = None
+    user_type: Optional[UserType] = UserType.user
     
 
 class EntityType(str, Enum):

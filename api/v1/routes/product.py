@@ -6,6 +6,7 @@ from api.db.database import get_db
 from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
+from api.v1.models.tag import TagAssociation, Tag
 from api.v1.models.user import User
 from api.v1.models.product import Product
 from api.v1.services.auth import AuthService
@@ -48,9 +49,6 @@ async def create_product(
         
     if payload.attributes:
         payload.attributes = helpers.format_additional_info_create(payload.attributes)
-        
-    payload.status = payload.status.value
-    payload.type = payload.type.value
 
     product = Product.create(
         db=db,
@@ -95,6 +93,8 @@ async def get_products(
     type: str = None,
     vendor_id: str = None,
     parent_id: str = None,
+    get_parents: bool = None,
+    tags: str = None,
     is_available: bool = None,
     page: int = 1,
     per_page: int = 10,
@@ -129,6 +129,23 @@ async def get_products(
         vendor_id=vendor_id,
         parent_id=parent_id,
     )
+    
+    if tags:
+        tags_list = [tag.strip() for tag in tags.split(',')]      
+        query = (
+            query
+            .join(TagAssociation, TagAssociation.entity_id==Product.id)
+            .join(Tag, Tag.id == TagAssociation.tag_id)
+            .filter(Tag.name.in_(tags_list))
+        )
+    
+    if get_parents == True:
+        query = query.filter(Product.parent_id == None)
+        
+    if get_parents == False:
+        query = query.filter(Product.parent_id != None)
+        
+    products, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[product.to_dict() for product in products],

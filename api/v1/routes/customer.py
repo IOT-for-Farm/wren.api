@@ -2,6 +2,7 @@ import csv
 from io import StringIO
 from pprint import pprint
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from psycopg2 import IntegrityError
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -9,8 +10,10 @@ from api.utils import paginator, helpers
 from api.utils.responses import success_response
 from api.utils.settings import settings
 from api.v1.models.business_partner import BusinessPartner
+from api.v1.models.contact_info import ContactInfo
 from api.v1.models.user import User
 from api.v1.models.customer import Customer
+from api.v1.schemas.contact_info import ContactType
 from api.v1.services.auth import AuthService
 from api.v1.schemas.auth import AuthenticatedEntity
 from api.v1.services.customer import CustomerService
@@ -95,6 +98,11 @@ async def bulk_upload_customer(
         organization_id=organization_id
     )
     
+    file_extension = file.filename.split('.')[-1]
+    
+    if file_extension != 'csv':
+        raise HTTPException(400, f'Expected csv file but got {file_extension}')
+    
     # Read the file contents
     contents = await file.read()
     
@@ -108,45 +116,84 @@ async def bulk_upload_customer(
     rows = list(csv_reader)
     headers = rows[0]  # Assuming first row is header
     data = [dict(zip(headers, row)) for row in rows[1:]]
-    
-    pprint(data)
-    
-    for payload in data:
-        pass
+
+    try:
+        number_of_customers_added = 0
+
+        for payload in data:
+            if not all([payload.get("email"), payload.get("first_name"), payload.get("last_name")]):
+                continue
+            
+            print(payload)
+
+            # Check if business partner exists
+            existing_partner = BusinessPartner.fetch_one_by_field(
+                db=db, throw_error=False,
+                organization_id=organization_id,
+                email=payload.get('email'),
+                partner_type="customer"
+            )
+            
+            if existing_partner:
+                continue
+            
+            # Create business partner
+            business_partner = BusinessPartner(
+                # db=db,
+                unique_id=helpers.generate_unique_id(
+                    db=db, 
+                    organization_id=organization_id,
+                ),
+                organization_id=organization_id,  # Ensure this is passed
+                partner_type="customer",
+                email=payload.get('email'),
+                first_name=payload.get('first_name'),
+                last_name=payload.get('last_name'),
+                phone=payload.get('phone'),
+                phone_country_code=payload.get('phone_country_code'),
+                image_url=helpers.generate_logo_url(f"{payload.get('first_name')} {payload.get('last_name')}")
+            )
+            db.add(business_partner)
+            # db.flush()
+            
+            # Create customer
+            customer = Customer(
+                # db=db,
+                unique_id=helpers.generate_unique_id(
+                    db=db, 
+                    organization_id=organization_id,
+                ),
+                business_partner_id=business_partner.id,
+            )
+            db.add(customer)      
+            
+            if payload.get('phone') and payload.get('phone_country_code'):
+                contact_info = ContactInfo(
+                    # db=db,
+                    model_name='business_partners',
+                    model_id=business_partner.id,
+                    contact_type=ContactType.PHONE.value,
+                    contact_data=payload.get('phone'),
+                    phone_country_code=payload.get('phone_country_code'),
+                    is_primary=True
+                )
+                db.add(contact_info)
+            
+            number_of_customers_added += 1
+
+        db.commit()  # Only commit if all operations succeeded
+        print('Customer upload successsful')
         
-    # # Check if business partner exists
-    # BusinessPartner.fetch_one_by_field(
-    #     db=db,
-    #     id=business_partner_id,
-    #     partner_type="customer"
-    # )
-    
-    # # Check for existing customer
-    # existing_customer = Customer.fetch_one_by_field(
-    #     db=db, throw_error=False,
-    #     business_partner_id=business_partner_id
-    # )
-    
-    # if existing_customer:
-    #     raise HTTPException(400, "Customer with this business partner id already exists")
-    
-    # if not payload.unique_id:
-    #     payload.unique_id = helpers.generate_unique_id(
-    #         db=db, 
-    #         organization_id=organization_id,
-    #     )
+        return success_response(
+            message=f"Bulk upload successful. Added {number_of_customers_added} customer(s)",
+            status_code=201
+        )
 
-    # customer = Customer.create(
-    #     db=db,
-    #     business_partner_id=business_partner_id,
-    #     **payload.model_dump(exclude_unset=True)
-    # )
-
-    return success_response(
-        message=f"Bulk upload successful",
-        status_code=201
-    )
-
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Bulk upload failed: {str(e)}")
+        raise HTTPException(500, "Failed to process bulk upload")
+    
 
 @customer_router.get("", status_code=200)
 async def get_customers(
@@ -194,8 +241,7 @@ async def get_customers(
     if last_name:
         query = query.filter(BusinessPartner.last_name.ilike(f"%{last_name}%"))
     
-    customers = query.all()
-    count = query.count()
+    customers, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[customer.to_dict() for customer in customers],

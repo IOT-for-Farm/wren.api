@@ -290,8 +290,7 @@ async def get_form_templates(
         )
     )
     
-    count = query.count()
-    form_templates = query.all()
+    form_templates, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[form_template.to_dict() for form_template in form_templates],

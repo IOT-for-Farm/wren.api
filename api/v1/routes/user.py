@@ -75,7 +75,7 @@ async def get_users(
     # )
 
 @user_router.get('/me', status_code=200, response_model=success_response)
-async def get_current_user(db: Session=Depends(get_db), user: User=Depends(AuthService.get_current_user_entity)):
+async def get_current_user(db: Session=Depends(get_db), entity: User=Depends(AuthService.get_current_user_entity)):
     """Endpoint to get the current user
 
     Args:
@@ -86,7 +86,7 @@ async def get_current_user(db: Session=Depends(get_db), user: User=Depends(AuthS
     return success_response(
         status_code=200,
         message='User fetched successfully',
-        data=user.to_dict()
+        data=entity.entity.to_dict()
     )
     
 @user_router.get('/{user_id}', status_code=200, response_model=success_response)

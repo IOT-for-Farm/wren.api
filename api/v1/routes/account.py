@@ -14,7 +14,7 @@ from api.v1.schemas import account as account_schemas
 from api.utils.loggers import create_logger
 
 
-account_router = APIRouter(prefix='/accounts', tags=['Account'])
+account_router = APIRouter(prefix='/accounts', tags=['Account- Org Bank'])
 logger = create_logger(__name__)
 
 @account_router.post("", status_code=201, response_model=success_response)

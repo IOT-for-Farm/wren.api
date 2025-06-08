@@ -1,14 +1,21 @@
 from datetime import datetime
+from typing import Optional
 from fastapi import BackgroundTasks, HTTPException, Request
 import requests
 from sqlalchemy.orm import Session
+from api.utils import helpers
+from api.v1.models.business_partner import BusinessPartner
+from api.v1.models.customer import Customer
+from api.v1.models.vendor import Vendor
+from api.v1.schemas.business_partner import BusinessPartnerBase
+from api.v1.services.business_partner import BusinessPartnerService
 from config import config
 
 from api.db.database import get_db
 from api.utils.loggers import create_logger
 from api.utils.telex_notification import TelexNotification
 from api.v1.models.user import User
-from api.v1.schemas.auth import CreateUser
+from api.v1.schemas.auth import CreateUser, UserType
 from api.v1.services.user import UserService
 from api.v1.services.auth import AuthService
 
@@ -19,7 +26,13 @@ class GoogleOauthService:
     """Handles database operations for google oauth"""
 
     @classmethod
-    def authenticate(cls, db: Session, id_token: str):
+    def authenticate(
+        cls, 
+        db: Session, 
+        id_token: str, 
+        user_type: UserType=UserType.user,
+        organization_id: Optional[str] = None
+    ):
         """Authenticate user with Google OAuth"""
         
         profile_endpoint = f'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={id_token}'
@@ -27,41 +40,95 @@ class GoogleOauthService:
         
         if profile_response.status_code != 200:
             logger.error(f"Failed to fetch user info: {profile_response.text}\nStatus code: {profile_response.status_code}")
-            raise HTTPException(status_code=profile_response.status_code, detail="Invalid token or failed to fetch user info")
+            raise HTTPException(
+                status_code=profile_response.status_code, 
+                detail="Invalid token or failed to fetch user info"
+            )
         
         profile_data = profile_response.json()
 
         email = profile_data.get('email')
-        user = User.fetch_one_by_field(db=db, throw_error=False, email=email)
         
-        # Check if the user exists
-        if user:
-            if not user.is_active:
-                raise HTTPException(403, "Account is inactive")
+        if user_type == UserType.user:
+            user = User.fetch_one_by_field(db=db, throw_error=False, email=email)
             
-            # User already exists, return their details
-            access_token = AuthService.create_access_token(db, user_id=user.id)
-            refresh_token = AuthService.create_refresh_token(db, user_id=user.id)
-        else:
-            # Create user
-            user, access_token, refresh_token = UserService.create(
-                db=db,
-                payload = CreateUser(
-                    email=email,
-                    first_name=profile_data.get('given_name'),
-                    last_name=profile_data.get('family_name'),
-                    profile_picture=profile_data.get('picture'),
-                    is_superuser=False
+            # Check if the user exists
+            if user:
+                if not user.is_active:
+                    raise HTTPException(403, "Account is inactive")
+                
+                # User already exists, return their details
+                access_token = AuthService.create_access_token(db, user_id=user.id)
+                refresh_token = AuthService.create_refresh_token(db, user_id=user.id)
+            else:
+                # Create user
+                user, access_token, refresh_token = UserService.create(
+                    db=db,
+                    payload = CreateUser(
+                        email=email,
+                        first_name=profile_data.get('given_name'),
+                        last_name=profile_data.get('family_name'),
+                        profile_picture=profile_data.get('picture'),
+                        is_superuser=False
+                    )
                 )
+                
+            # Update last_login of user
+            user = User.update(db, user.id, last_login=datetime.now())
+        
+        else:
+            if not organization_id:
+                raise HTTPException(400, 'Missing organization id in query params')
+            
+            # Check if business partner exists
+            user = BusinessPartner.fetch_one_by_field(
+                db=db, throw_error=False,
+                organization_id=organization_id,
+                email=email,
+                partner_type=user_type.value
             )
             
-        # Update last_login of user
-        user = User.update(db, user.id, last_login=datetime.now())
-        
+            if not user:
+                user = BusinessPartnerService.create_business_partner(
+                    db=db,
+                    payload=BusinessPartnerBase(
+                        unique_id=helpers.generate_unique_id(db=db, organization_id=organization_id),
+                        organization_id=organization_id,
+                        partner_type=user_type.value,
+                        email=email,
+                        first_name=profile_data.get('given_name'),
+                        last_name=profile_data.get('family_name'),
+                        image_url=profile_data.get('picture'),
+                    )
+                )
+                
+                if user_type == UserType.customer:
+                    # Create customer
+                    Customer.create(
+                        db=db,
+                        business_partner_id=user.id
+                    )
+                    
+                if user_type == UserType.vendor:
+                    # Create vendor
+                    Vendor.create(
+                        db=db,
+                        business_partner_id=user.id
+                    )
+            
+            # Create access and refresh tokens
+            access_token = AuthService.create_access_token(db, user_id=user.id, user_type=user_type)
+            refresh_token = AuthService.create_refresh_token(db, user_id=user.id, user_type=user_type)
+                
         return user, access_token, refresh_token
     
     @classmethod
-    def callback(cls, db: Session, request: Request):
+    def callback(
+        cls, 
+        db: Session, 
+        request: Request, 
+        organization_id: Optional[str] = None  # in case the org has their own secret keys
+    ):
         code = request.query_params.get("code")
 
         if not code:

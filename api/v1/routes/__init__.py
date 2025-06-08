@@ -32,6 +32,8 @@ from api.v1.routes.price import price_router
 from api.v1.routes.refund import refund_router
 from api.v1.routes.product_variant import product_variant_router
 from api.v1.routes.business_partner import business_partner_router
+from api.v1.routes.activity_log import activity_log_router
+from api.v1.routes.event import event_router
 
 v1_router = APIRouter(prefix='/api/v1')
 
@@ -62,9 +64,11 @@ v1_router.include_router(template_router)
 v1_router.include_router(layout_router)
 v1_router.include_router(file_router)
 v1_router.include_router(form_router)
+v1_router.include_router(event_router)
 v1_router.include_router(tag_router)
 v1_router.include_router(category_router)
 v1_router.include_router(contact_info_router)
 v1_router.include_router(location_router)
 v1_router.include_router(comment_router)
 v1_router.include_router(review_router)
+v1_router.include_router(activity_log_router)

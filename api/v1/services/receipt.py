@@ -1,5 +1,7 @@
 from datetime import datetime
+from typing import List, Optional
 from fastapi import HTTPException
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from api.core.dependencies.celery.queues.email.tasks import send_email_celery
@@ -29,7 +31,8 @@ class ReceiptService:
         context: dict = None,
         transaction_reference: str = None,
         send_notification: bool = True,
-        check_invoice_paid: bool = True
+        check_invoice_paid: bool = True,
+        recipients: Optional[List[EmailStr]] = None
     ):
         '''This generates invoice receipt'''
         
@@ -74,7 +77,6 @@ class ReceiptService:
         
         # Send receipt to customer
         if send_notification:
-            
             if receipt.customer_id or receipt.vendor_id:
                 if receipt.customer_id:
                     customer = Customer.fetch_by_id(db, receipt.customer_id)
@@ -126,10 +128,11 @@ class ReceiptService:
                         template_id=template_id,
                         context=template_data
                     )
-                                        
+                
+                recipients = recipients if recipients else []        
                 send_email_celery.delay(
-                    recipients=[email_to_notify],
-                    subject=f'Receipt for Invoice {invoice.unique_id}',
+                    recipients=list(set([email_to_notify] + recipients)),
+                    subject=f'Receipt for Invoice #{invoice.unique_id}',
                     template_name=template_name if not template_id else None,
                     html_template_string=html if template_id else None,
                     template_data=template_data,

@@ -7,6 +7,7 @@ from jose import JWTError, jwt
 from api.utils.loggers import create_logger
 from api.utils.settings import settings
 from api.v1.models.token import BlacklistedToken, Token
+from api.v1.schemas.auth import UserType
 
 
 logger = create_logger(__name__)
@@ -20,7 +21,8 @@ class TokenService:
         token_type: str, 
         expiry_in_minutes: int,
         user_id: Optional[str]=None,
-        payload={}
+        payload={},
+        user_type: UserType = UserType.user,
     ):
         
         expires = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=expiry_in_minutes)
@@ -28,7 +30,8 @@ class TokenService:
             **payload,
             "user_id": user_id, 
             "exp": expires, 
-            "type": token_type
+            "type": token_type,
+            "user_type": user_type
         }
         
         # Remove user_id from payload if it is None
@@ -42,7 +45,8 @@ class TokenService:
             token=encoded_jwt,
             token_type=token_type,
             expiry_time=expires,
-            user_id=user_id
+            user_id=user_id,
+            user_type=user_type
         )
         return encoded_jwt
     

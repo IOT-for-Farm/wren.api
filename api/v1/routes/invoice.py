@@ -54,6 +54,7 @@ async def create_invoice(
             send_notification=payload.send_notification,
             template_id=payload.template_id,
             context=payload.context,
+            recipients=payload.recipients,
         )
     
     if payload.vendor_id:
@@ -69,6 +70,7 @@ async def create_invoice(
             send_notification=payload.send_notification,
             template_id=payload.template_id,
             context=payload.context,
+            recipients=payload.recipients,
         )
         
     # TODO: Generate department invoice
@@ -134,13 +136,12 @@ async def get_invoices(
     if issue_date and due_date:
         query = query.filter(
             and_(
-                Invoice.due_date >= due_date,
+                Invoice.due_date <= due_date,
                 Invoice.issue_date >= issue_date,
             )
         )
         
-    invoices = query.all()
-    count = query.count()
+    invoices, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[invoice.to_dict() for invoice in invoices],

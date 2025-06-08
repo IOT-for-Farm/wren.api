@@ -137,8 +137,7 @@ async def get_vendors(
     if last_name:
         query = query.filter(BusinessPartner.last_name.ilike(f"%{last_name}%"))
     
-    vendors = query.all()
-    count = query.count()
+    vendors, count = paginator.paginate_query(query, page, per_page)
     
     return paginator.build_paginated_response(
         items=[vendor.to_dict() for vendor in vendors],

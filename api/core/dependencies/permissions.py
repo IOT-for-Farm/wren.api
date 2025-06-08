@@ -7,10 +7,10 @@ ORG_PERMS = [
     "department:create", "department:update", "department:view", "department:delete",
     "location:create", "location:update", "location:delete", "location:view", "contact_info:create",
     "contact_info:update", "contact_info:delete", "contact_info:view", "role:create",
-    "role:update", "role:delete", "role:view", "organization:assign-role"
+    "role:update", "role:delete", "role:view", "organization:assign-role",
     "business-partner:delete", "business-partner:attach-to-user", "business-partner:update", 
-    "business-partner:create",
-    
+    "business-partner:create", "event:create", "event:update", "event:delete", "event:invite-user" ,
+    "secret:create", "secret:update", "secret:delete", "secret:view" 
 ]
     
 CONTENT_PERMS = [
@@ -31,7 +31,7 @@ BILLING_PERMS = [
 ]
 
 REPORT_PERMS = [
-    "report:generate", "report:view", "report:export"
+    "report:generate", "report:view", "report:export", "logs:view"
 ]
 
 APIKEY_PERMS = [
@@ -103,7 +103,7 @@ AGENT_PREMS = PRODUCT_AND_SALES_PERMS + FINANCIAL_PERMS + CATEGORY_PERMS + REPOR
 ROLE_PERMISSIONS: Dict[str, List[str]] = {
     # System roles
     "Superadmin": ["*"],  # Wildcard for all permissions
-    "System Auditor": REPORT_PERMS + ["logs:view"],
+    "System Auditor": REPORT_PERMS,
     
     # Organization roles
     "Owner": ADMIN_PERMS,
