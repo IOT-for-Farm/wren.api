@@ -52,10 +52,14 @@ class Order(BaseTableModel):
         return total
     
     def to_dict(self, excludes=[]):
-        return {
+        data = {
             'total_amount': self.total_amount,
             **super().to_dict(excludes),
         }
+        
+        data['items'] = [item.to_dict() for item in self.items]
+        
+        return data
     
 
 class OrderItem(BaseTableModel):
@@ -67,3 +71,18 @@ class OrderItem(BaseTableModel):
     
     product = relationship('Product', backref='product_orders', uselist=False, lazy='selectin')
     # order = relationship('Order', back_populates='items')
+    
+    @hybrid_property
+    def amount(self):
+        if not self.product.price:
+            return 0.0
+        
+        return self.product.price.selling_price * self.quantity
+
+    def to_dict(self, excludes=[]):
+        data = {
+            "amount": self.amount,
+            **super().to_dict(excludes)
+        }
+        
+        return data

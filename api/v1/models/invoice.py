@@ -35,6 +35,7 @@ class Invoice(BaseTableModel):
     discount = sa.Column(sa.Numeric(12, 2), default=0.00)
     
     currency_code = sa.Column(sa.String(10), default='NGN')
+    items = sa.Column(sa.JSON, server_default='[]')
     # total = sa.Column(sa.Numeric(12, 2))
 
     payments = relationship("Payment", back_populates="invoice", lazy="selectin")
@@ -47,7 +48,13 @@ class Invoice(BaseTableModel):
     def total(self):
         '''Get total amount for invoice'''
         
-        return (self.subtotal or 0) + (self.tax or 0) - (self.discount or 0)
+        total_amount = (self.subtotal or 0) + (self.tax or 0) - (self.discount or 0)
+        
+        if self.items:
+            for item in self.items:
+                total_amount += (item['rate'] * item['quantity'])
+                
+        return total_amount
     
     @hybrid_property
     def amount_paid(self):

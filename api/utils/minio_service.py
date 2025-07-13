@@ -56,7 +56,7 @@ class MinioService:
         object_name: str, 
         response_content_disposition: str = None
     ):
-        bucket_name = 'tifi'
+        bucket_name = config("APP_NAME")
         try:
             url = cls.minio_client.presigned_get_object(
                 bucket_name=bucket_name,
@@ -87,7 +87,7 @@ class MinioService:
 
     #     # file_extension = source_file.split('.')[-1]
     #     # content_type = EXTENSION_TO_MIME_TYPES_MAPPING[file_extension]
-    #     bucket_name = 'tifi'
+    #     bucket_name = config("APP_NAME")
     #     destination = f"{folder_name}/{destination_file}"
 
     #     try:
@@ -146,7 +146,7 @@ class MinioService:
             allowed_extensions=allowed_extensions
         )
 
-        bucket_name = 'wren'
+        bucket_name = config("APP_NAME")
         filename = new_file.file_name
         file_extension = filename.split('.')[-1]
         content_type = EXTENSION_TO_MIME_TYPES_MAPPING[file_extension]
@@ -179,12 +179,13 @@ class MinioService:
             # )
 
             # Update file url
-            File.update(
-                db=db,
-                id=new_file.id,
-                url=preview_url
-            )
-            
+            if isinstance(new_file, File):
+                File.update(
+                    db=db,
+                    id=new_file.id,
+                    url=preview_url
+                )
+                
             return preview_url
 
         except S3Error as s3_error:
@@ -199,7 +200,7 @@ class MinioService:
             object_name (str): Name of the file to be deleted
         """
 
-        bucket_name = 'wren'
+        bucket_name = config("APP_NAME")
         try:
             cls.minio_client.remove_object(bucket_name, object_name)
             return True

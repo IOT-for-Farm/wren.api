@@ -41,7 +41,7 @@ async def create_invoice(
         
     if not payload.due_date:
         # Set due date to be 14 days later
-        payload.due_date = datetime.now() + timedelta(days=14)
+        payload.due_date = datetime.now() + timedelta(days=14)        
 
     if payload.order_id:
         invoice = InvoiceService.generate_order_invoice(
@@ -57,7 +57,7 @@ async def create_invoice(
             recipients=payload.recipients,
         )
     
-    if payload.vendor_id:
+    elif payload.vendor_id:
         invoice = InvoiceService.generate_vendor_invoice(
             db=db,
             organization_id=payload.organization_id,
@@ -72,6 +72,22 @@ async def create_invoice(
             context=payload.context,
             recipients=payload.recipients,
         )
+    
+    else:
+        invoice = InvoiceService.generate_custom_invoice(
+            db=db,
+            organization_id=payload.organization_id,
+            unique_id=payload.unique_id,
+            due_date=payload.due_date,
+            currency_code=payload.currency_code,
+            send_notification=payload.send_notification,
+            template_id=payload.template_id,
+            context=payload.context,
+            recipients=payload.recipients,
+            items=payload.items,
+            customer_id=payload.customer_id
+        )
+        
         
     # TODO: Generate department invoice
     
@@ -190,6 +206,17 @@ async def update_invoice(
         permission='invoice:update',
         organization_id=organization_id
     )
+    
+    if payload.items:
+        invoice_items = []
+        for item in payload.items:
+            invoice_items.append({
+                "rate": item.rate,
+                "quantity": item.quantity,
+                "description": item.description,
+            })
+            
+        payload.items = invoice_items
 
     invoice = Invoice.update(
         db=db,

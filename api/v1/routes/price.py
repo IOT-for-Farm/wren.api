@@ -1,5 +1,6 @@
+from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
@@ -133,12 +134,17 @@ async def update_price(
         permission='price:update',
         organization_id=organization_id
     )
+    
+    price = ProductPrice.fetch_by_id(db, id) 
 
     # Deactiveate all active product prices so as to have only one active price per product
     if payload.is_active and payload.is_active == True:
+        if price.end_date and price.end_date < datetime.now():
+            raise HTTPException(400, "Cannot set an expired price as an active price")
+        
         PriceService.deactivate_active_prices(db, product_id, variant_id)
         
-    price = ProductPrice.update(
+    updated_price = ProductPrice.update(
         db=db,
         id=id,
         **payload.model_dump(exclude_unset=True)
@@ -147,7 +153,7 @@ async def update_price(
     return success_response(
         message=f"Price updated successfully",
         status_code=200,
-        data=price.to_dict()
+        data=updated_price.to_dict()
     )
 
 

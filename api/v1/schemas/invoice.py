@@ -12,19 +12,24 @@ class InvoiceStatus(str, Enum):
     cancelled = 'cancelled'
     
 
+class InvoiceItem(BaseModel):
+    rate: float
+    quantity: int
+    description: str
+    
+
 class InvoiceBase(BaseModel):
 
     unique_id: Optional[str] = None
     
     organization_id: str
     department_id: Optional[str] = None
-    # customer_id: Optional[str] = None
+    customer_id: Optional[str] = None
     vendor_id: Optional[str] = None
     order_id: Optional[str] = None
-    
     currency_code: Optional[str] = 'NGN'
-    
     due_date: Optional[datetime] = None
+    items: Optional[List[InvoiceItem]] = None
     # status: Optional[InvoiceStatus] = InvoiceStatus.pending
     
     @field_validator("due_date")
@@ -52,9 +57,38 @@ class GenerateInvoice(InvoiceBase):
     template_id: Optional[str] = None
     context: Optional[dict] = None
     recipients: Optional[List[EmailStr]] = None
+    
+
+class GenerateSaleInvoice(BaseModel):
+    unique_id: Optional[str] = None
+    
+    organization_id: str
+    department_id: Optional[str] = None
+    sale_id: str
+    
+    currency_code: Optional[str] = 'NGN'
+    
+    due_date: Optional[datetime] = None
+    send_notification: Optional[bool] = False
+    template_id: Optional[str] = None
+    context: Optional[dict] = None
+    recipients: Optional[List[EmailStr]] = None
+    
+    @field_validator("due_date")
+    def validate_end_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date cannot be in the past.")
+        return v
 
 
 class UpdateInvoice(BaseModel):
 
     due_date: Optional[datetime] = None
     status: Optional[InvoiceStatus] = None
+    items: Optional[List[InvoiceItem]] = None
+    
+    @field_validator("due_date")
+    def validate_end_date(cls, v):
+        if v and v < datetime.now():
+            raise ValueError("Due date cannot be in the past.")
+        return v

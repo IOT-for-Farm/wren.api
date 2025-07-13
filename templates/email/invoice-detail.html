@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invoice #{{invoice.id}} - {{invoice.status}}</title>
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#F8F9FA;">
+    <!-- Main Container -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#F8F9FA">
+        <tr>
+            <td align="center">
+                <!-- Invoice Card (600px max) -->
+                <table width="600" border="0" cellspacing="0" cellpadding="0">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding:25px;background-color:#2C3E50;color:#FFFFFF;text-align:center;">
+                            <h1 style="margin:0;font-size:22px;">Invoice #{{invoice.unique_id}}</h1>
+                            <p style="margin:5px 0 0;font-size:16px;color:#BDC3C7;">
+                                Status: <span style="color:{% if invoice.status == 'paid' %}#27ae60{% elif invoice.status == 'overdue' %}#e74c3c{% else %}#f39c12{% endif %};">{{invoice.status|upper}}</span>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Organization & Customer Info -->
+                    <tr>
+                        <td style="padding:20px;background-color:#FFFFFF;border-left:1px solid #ECF0F1;border-right:1px solid #ECF0F1;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="50%" style="vertical-align:top;">
+                                        <h3 style="color:#2C3E50;margin-top:0;">From:</h3>
+                                        <p style="margin:5px 0;">{{invoice.organization.name}}</p>
+                                        {% if invoice.department %}
+                                        <p style="margin:5px 0;">{{invoice.department.name}}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td width="50%" style="vertical-align:top;">
+                                        <h3 style="color:#2C3E50;margin-top:0;">To:</h3>
+                                        <p style="margin:5px 0;">{{invoice.customer.name}}</p>
+                                        {% if invoice.order and invoice.order.customer_email %}
+                                        <p style="margin:5px 0;">{{invoice.order.customer_email}}</p>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Invoice Dates -->
+                    <tr>
+                        <td style="padding:15px 20px;background-color:#FFFFFF;border-left:1px solid #ECF0F1;border-right:1px solid #ECF0F1;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="33%" style="vertical-align:top;">
+                                        <p style="margin:5px 0;"><strong>Issued:</strong><br>{{invoice.issue_date|date_format}}</p>
+                                    </td>
+                                    <td width="33%" style="vertical-align:top;">
+                                        <p style="margin:5px 0;"><strong>Due:</strong><br>{{invoice.due_date|date_format}}</p>
+                                    </td>
+                                    <td width="33%" style="vertical-align:top;">
+                                        <p style="margin:5px 0;"><strong>Currency:</strong><br>{{invoice.currency_code}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Invoice Items -->
+                    <tr>
+                        <td style="padding:20px;background-color:#FFFFFF;border-left:1px solid #ECF0F1;border-right:1px solid #ECF0F1;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="padding:10px;background-color:#34495E;color:#FFFFFF;font-weight:bold;">Item</td>
+                                    <td style="padding:10px;background-color:#34495E;color:#FFFFFF;font-weight:bold;text-align:right;">Qty</td>
+                                    <td style="padding:10px;background-color:#34495E;color:#FFFFFF;font-weight:bold;text-align:right;">Rate</td>
+                                    <td style="padding:10px;background-color:#34495E;color:#FFFFFF;font-weight:bold;text-align:right;">Amount</td>
+                                </tr>
+                                {% for item in invoice.items %}
+                                <tr>
+                                    <td style="padding:10px;border-bottom:1px solid #ECF0F1;">{{item.description}}</td>
+                                    <td style="padding:10px;border-bottom:1px solid #ECF0F1;text-align:right;">{{item.quantity}}</td>
+                                    <td style="padding:10px;border-bottom:1px solid #ECF0F1;text-align:right;">{{item.rate|currency_format(invoice.currency_code)}}</td>
+                                    <td style="padding:10px;border-bottom:1px solid #ECF0F1;text-align:right;">{{(item.rate * item.quantity)|currency_format(invoice.currency_code)}}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Invoice Summary -->
+                    <tr>
+                        <td style="padding:20px;background-color:#FFFFFF;border-left:1px solid #ECF0F1;border-right:1px solid #ECF0F1;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="70%"></td>
+                                    <td width="30%">
+                                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td style="padding:5px 0;"><strong>Subtotal:</strong></td>
+                                                <td style="padding:5px 0;text-align:right;">{{invoice.subtotal|currency_format(invoice.currency_code)}}</td>
+                                            </tr>
+                                            {% if invoice.tax > 0 %}
+                                            <tr>
+                                                <td style="padding:5px 0;"><strong>Tax:</strong></td>
+                                                <td style="padding:5px 0;text-align:right;">{{invoice.tax|currency_format(invoice.currency_code)}}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if invoice.discount > 0 %}
+                                            <tr>
+                                                <td style="padding:5px 0;"><strong>Discount:</strong></td>
+                                                <td style="padding:5px 0;text-align:right;">-{{invoice.discount|currency_format(invoice.currency_code)}}</td>
+                                            </tr>
+                                            {% endif %}
+                                            <tr>
+                                                <td style="padding:5px 0;border-top:1px solid #ECF0F1;"><strong>Total:</strong></td>
+                                                <td style="padding:5px 0;border-top:1px solid #ECF0F1;text-align:right;">{{invoice.total|currency_format(invoice.currency_code)}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:5px 0;"><strong>Amount Paid:</strong></td>
+                                                <td style="padding:5px 0;text-align:right;">{{invoice.amount_paid|currency_format(invoice.currency_code)}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:5px 0;border-top:1px solid #2C3E50;"><strong>Balance Due:</strong></td>
+                                                <td style="padding:5px 0;border-top:1px solid #2C3E50;text-align:right;">{{invoice.amount_remaining|currency_format(invoice.currency_code)}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Payment CTA -->
+                    {% if not invoice.payment_complete %}
+                    <tr>
+                        <td style="padding:20px;background-color:#FFFFFF;border-left:1px solid #ECF0F1;border-right:1px solid #ECF0F1;text-align:center;">
+                            <a href="{{payment_link}}" style="background-color:#2980B9;color:#FFFFFF;padding:12px 24px;text-decoration:none;border-radius:4px;font-weight:bold;display:inline-block;">Pay Invoice</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:20px;background-color:#2C3E50;text-align:center;font-size:12px;color:#BDC3C7;">
+                            <p style="margin:5px 0;">© {{now|date_format('%Y')}} {{invoice.organization.name}}. All rights reserved.</p>
+                            <p style="margin:5px 0;">
+                                <a href="{{terms_url}}" style="color:#BDC3C7;text-decoration:underline;">Terms</a> | 
+                                <a href="{{privacy_url}}" style="color:#BDC3C7;text-decoration:underline;">Privacy</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

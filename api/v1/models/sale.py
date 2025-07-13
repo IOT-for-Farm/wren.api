@@ -99,6 +99,10 @@ class Sale(BaseTableModel):
     @hybrid_property
     def organization_profit(self):
         return float(self.profit_on_sale )- self.vendor_profit
+    
+    @hybrid_property
+    def profit_margin(self):
+        return (self.profit_on_sale / self.total_price_of_sale) * 100
         
 
     def to_dict(self, excludes=[]):

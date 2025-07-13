@@ -1,4 +1,5 @@
 from typing import List
+from slugify import slugify
 from sqlalchemy.orm import Session
 
 from api.utils.loggers import create_logger
@@ -33,14 +34,20 @@ class TagService:
             
             # If tag does not exist, skip
             if not tag:
-                continue
+                # Assuming the tag id is the name provided
+                tag = Tag.create(
+                    db=db,
+                    name=tag_id.lower(),
+                    model_type=model_type,
+                    organization_id=organization_id,
+                )
             
             tag_association = TagAssociation.fetch_one_by_field(
                 db,
                 throw_error=False,
                 entity_id=entity_id,
                 model_type=model_type,
-                tag_id=tag_id,
+                tag_id=tag.id,
             )
             
             # If tag association exists, skip
@@ -51,7 +58,7 @@ class TagService:
             TagAssociation.create(
                 db=db,
                 entity_id=entity_id,
-                tag_id=tag_id,
+                tag_id=tag.id,
                 model_type=model_type
             )
 

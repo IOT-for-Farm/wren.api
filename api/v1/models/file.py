@@ -18,6 +18,7 @@ class File(BaseTableModel):
     description = sa.Column(sa.Text)
     content = sa.Column(sa.Text)
     label = sa.Column(sa.String)
+    position = sa.Column(sa.Integer, server_default="0")
 
 
 class Folder(BaseTableModel):

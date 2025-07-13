@@ -12,9 +12,7 @@ class InventoryBase(BaseModel):
     quantity: int
     
     reorder_threshold: Optional[int] = 5
-    reorder_amount: Optional[int] = None
-    
-    currency_code: str = 'NGN'
+    reorder_amount: Optional[int] = None    
     
     is_active: Optional[bool] = True
 

@@ -104,6 +104,11 @@ class Product(BaseTableModel):
         viewonly=True
     )
     
+    def to_dict(self, excludes=[]):
+        data = super().to_dict(excludes)
+        data['inventory'] = self.inventory.to_dict() if self.inventory else None
+        return data
+    
 
 class ProductVariant(BaseTableModel):
     __tablename__ = 'product_variants'
@@ -141,6 +146,10 @@ class ProductVariant(BaseTableModel):
         lazy='selectin',
         viewonly=True
     )
+    
+    def to_dict(self, excludes=[]):
+        data = super().to_dict(excludes)
+        return data
     
 
 class ProductPrice(BaseTableModel):

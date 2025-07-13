@@ -25,9 +25,10 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-database_url = (
-    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+# database_url = (
+#     f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# )
+database_url = settings.DB_URL
 
 # Set the SQLAlchemy URL dynamically
 config.set_main_option('sqlalchemy.url', database_url)

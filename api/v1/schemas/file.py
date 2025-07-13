@@ -31,6 +31,7 @@ class UpdateFile(BaseModel):
     url: Optional[str] = Form(None)
     description: Optional[str] = Form(None)
     label: Optional[str] = Form(None)
+    position: Optional[int] = Form(None)
     
     @field_validator("label", mode="before")
     @classmethod

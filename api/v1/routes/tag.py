@@ -73,7 +73,7 @@ async def get_tags(
     model_type: str = None,
     parent_id: str = None,
     page: int = 1,
-    per_page: int = 10,
+    per_page: int = 25,
     sort_by: str = 'created_at',
     order: str = 'desc',
     db: Session=Depends(get_db), 

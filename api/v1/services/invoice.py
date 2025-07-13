@@ -7,6 +7,7 @@ from fastapi import HTTPException
 
 from api.utils import helpers
 from api.utils.loggers import create_logger
+from api.v1.models.customer import Customer
 from api.v1.models.invoice import Invoice
 from api.v1.models.order import Order
 from api.v1.models.sale import Sale
@@ -20,6 +21,81 @@ from api.v1.services.template import TemplateService
 logger = create_logger(__name__)
 
 class InvoiceService:
+    
+    @classmethod
+    def generate_custom_invoice(
+        cls,
+        db: Session, 
+        organization_id: str,
+        unique_id: str,
+        due_date: datetime = None,
+        currency_code: str = 'NGN',
+        template_id: str = None,
+        description: str = None,
+        customer_id: str = None,
+        context: dict = None,
+        send_notification: bool = False,
+        recipients: Optional[List[EmailStr]] = None,
+        items: Optional[List[invoice_schemas.InvoiceItem]] = None
+    ):
+        from api.core.dependencies.celery.queues.email.tasks import send_email_celery
+        
+        invoice_items = []
+        if items:
+            for item in items:
+                invoice_items.append({
+                    "rate": item.rate,
+                    "quantity": item.quantity,
+                    "description": item.description,
+                })
+        
+        customer = None
+        if customer_id:
+            customer = Customer.fetch_one_by_field(db, business_partner_id=customer_id)
+        
+        invoice = Invoice.create(
+            db=db,
+            unique_id=unique_id,
+            organization_id=organization_id,
+            due_date=due_date,
+            currency_code=currency_code,
+            description=description,
+            invoice_month=datetime.now().month,
+            invoice_year=datetime.now().year,
+            items=invoice_items,
+            customer_id=customer_id
+        )
+        
+        if send_notification:
+            template_data=invoice.to_dict()
+            
+            if customer:
+                template_data['customer'] = customer.to_dict()
+            
+            # TODO: Send invoice notification to user
+            html = None
+            if template_id:
+                template_data = template_data if not context else context
+                
+                html, _, _, _ = TemplateService.render_template(
+                    db=db,
+                    template_id=template_id,
+                    context=template_data
+                )
+            
+            recipients = recipients if recipients else []
+                        
+            send_email_celery.delay(
+                recipients=recipients + [customer.business_partner.email],
+                subject=f'Here is your invoice',
+                template_name='invoice-detail.html' if not template_id else None,
+                html_template_string=html if template_id else None,
+                template_data=template_data,
+                add_pdf_attachment=True
+            )
+        
+        return invoice
+                
     
     @classmethod
     def generate_order_invoice(

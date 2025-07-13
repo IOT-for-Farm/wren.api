@@ -84,7 +84,7 @@
                     <tr></tr>
                     {% endif %}
 
-                    {% if order.status == "pending" %}
+                    {% if order.status == "pending" and business_partner.partner_type == "vendor" %}
                     <tr>
                       <td>
                         <a href="#">Accept order</a>

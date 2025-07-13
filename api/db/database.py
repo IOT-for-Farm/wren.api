@@ -16,7 +16,8 @@ DB_TYPE = settings.DB_TYPE
 
 
 def get_db_engine(test_mode: bool = False):
-    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    # DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DATABASE_URL = settings.DB_URL
 
     if DB_TYPE == "sqlite" or test_mode:
         BASE_PATH = f"sqlite:///{BASE_DIR}"
@@ -28,10 +29,10 @@ def get_db_engine(test_mode: bool = False):
             return create_engine(
                 DATABASE_URL, connect_args={"check_same_thread": False}
             )
-    elif DB_TYPE == "postgresql":
-        DATABASE_URL = (
-            f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        )
+    # elif DB_TYPE == "postgresql":
+        # DATABASE_URL = (
+        #     f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        # )
 
     return create_engine(DATABASE_URL)
 

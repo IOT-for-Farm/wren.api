@@ -1,5 +1,6 @@
 import os
 import secrets
+import sqlalchemy as sa
 from typing import List
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
@@ -56,7 +57,7 @@ class FileService:
         new_filename = f'{payload.file_name}.{file_extension}' if payload.file_name else  f'{filename.split('.')[0]}_{secrets.token_hex(8)}.{file_extension}'
         new_filename = new_filename.replace(' ', '_')
         STORAGE_DIR = config("FILESTORAGE", default="filestorage")
-        file_path = f"{STORAGE_DIR}/{payload.model_name}/{payload.model_id}/{new_filename}"
+        file_path = f"{STORAGE_DIR}/{payload.organization_id}/{payload.model_name}/{payload.model_id}/{new_filename}"
         
         # Create directories if they do not exist
         try:
@@ -76,10 +77,18 @@ class FileService:
         
         file_url = f"{config('API_URL')}/{file_path}" if not payload.url else payload.url,  # TODO: fix up. generate url by uploading to a storage location
         if add_to_db:
+            # Find the highest position for the given model_name
+            max_position = (
+                db.query(sa.func.max(File.position))
+                .filter(File.model_name == payload.model_name)
+                .scalar()
+            ) or 0
+            
             # Save file metadata to database
             file_instance = File.create(
                 db,
                 organization_id=payload.organization_id,
+                position=max_position+1,
                 file_name=new_filename,
                 file_path=file_path,
                 file_size=payload.file.size,
@@ -188,4 +197,39 @@ class FileService:
         for folder in folders:
             folder.is_deleted = True
         
+        db.commit()
+
+    
+    @classmethod
+    def move_file_to_position(cls, db: Session, file_id: str, new_position: int):
+        # Get the file to move
+        file = File.fetch_by_id(db, file_id)
+
+        current_position = file.position
+        model_name = file.model_name
+
+        if new_position == current_position:
+            return  # No change needed
+
+        # Shift positions of other filees accordingly
+        if new_position < current_position:
+            # Moving up: shift others down
+            db.query(File).filter(
+                File.model_name == model_name,
+                File.position >= new_position,
+                File.position < current_position,
+                File.id != file.id
+            ).update({File.position: File.position + 1}, synchronize_session=False)
+        else:
+            # Moving down: shift others up
+            db.query(File).filter(
+                File.model_name == model_name,
+                File.position <= new_position,
+                File.position > current_position,
+                File.id != file.id
+            ).update({File.position: File.position - 1}, synchronize_session=False)
+
+        # Set new position for the dragged file
+        file.position = new_position
+
         db.commit()

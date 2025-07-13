@@ -26,13 +26,13 @@ class Settings(BaseSettings):
     MAIL_FROM_NAME: str = config("MAIL_FROM_NAME")
 
     # Database configurations
-    DB_HOST: str = config("DB_HOST")
-    DB_PORT: int = config("DB_PORT", cast=int)
-    DB_USER: str = config("DB_USER")
-    DB_PASSWORD: str = config("DB_PASSWORD")
-    DB_NAME: str = config("DB_NAME")
+    DB_HOST: str = config("POSTGRES_HOST")
+    DB_PORT: int = config("POSTGRES_PORT", cast=int)
+    DB_USER: str = config("POSTGRES_USER")
+    DB_PASSWORD: str = config("POSTGRES_PASSWORD")
+    DB_NAME: str = config("POSTGRES_DB")
     DB_TYPE: str = config("DB_TYPE")
-    DB_URL: str = config("DB_URL")
+    DB_URL: str = config("POSTGRES_URI")
     
     TEMP_DIR: str = os.path.join(Path(__file__).resolve().parent.parent.parent, 'tmp', 'media') 
 

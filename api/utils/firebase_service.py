@@ -48,12 +48,13 @@ class FirebaseService:
         # Get download URL
         download_url = storage.child(firebase_storage_path).get_url(None)
         
-        # Update file url
-        File.update(
-            db=db,
-            id=new_file.id,
-            url=download_url
-        )
+        if isinstance(new_file, File):
+            # Update file url
+            File.update(
+                db=db,
+                id=new_file.id,
+                url=download_url
+            )
         
         return download_url
 

@@ -43,7 +43,6 @@ async def create_file(
 
     file_obj = await FileService.upload_file(
         db=db,
-        # file_to_upload=payload.file,
         payload=payload
     )
     
@@ -64,8 +63,8 @@ async def get_files(
     file_name: str = None,
     page: int = 1,
     per_page: int = 10,
-    sort_by: str = 'created_at',
-    order: str = 'desc',
+    sort_by: str = 'position',
+    order: str = 'asc',
     db: Session=Depends(get_db), 
     entity: AuthenticatedEntity=Depends(AuthService.get_current_entity)
 ):
@@ -158,6 +157,12 @@ async def update_file(
     )
     
     file_instance = FileModel.fetch_by_id(db, id)
+    
+    if payload.position:
+        FileService.move_file_to_position(
+            db=db, file_id=file_instance.id,
+            new_position=payload.position
+        )
     
     if payload.file:
         file_obj = await FileService.upload_file(

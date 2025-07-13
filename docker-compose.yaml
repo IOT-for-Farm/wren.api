@@ -1,0 +1,74 @@
+services:
+  wren_api:
+    container_name: backend
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    working_dir: /usr/wren-api
+    command: alembic revision --autogenerate -m "auto migration" && alembic upgrade head && python3 main.py
+    depends_on:
+      wren_db:
+        condition: service_started
+      wren_rabbitmq:
+        condition: service_started
+    ports:
+      - "7001:7001"
+    environment:
+      - POSTGRES_URI:=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wren_db:5432/wrendb
+    env_file:
+      - .env
+    volumes:
+      - ./:/usr/wren-api
+  
+  wren_db:
+    container_name: postgres
+    restart: always
+    image: postgres:16-bullseye
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
+      POSTGRES_USER: '${POSTGRES_USER}'
+      POSTGRES_DB: wrendb
+      POSTGRES_HOST: wren_db
+    volumes:
+      - pg_data:/var/lib/postgres
+
+  wren_rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - '5673:5672'  # RabbitMQ server port
+      - '15673:15672'  # RabbitMQ management console port
+    environment:
+      RABBITMQ_DEFAULT_USER: '${RABBITMQ_USERNAME}'
+      RABBITMQ_DEFAULT_PASS: '${RABBITMQ_PASSWORD}'
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  # wren_typesense:
+  #   container_name: typesense
+  #   image: typesense/typesense:27.1
+  #   ports:
+  #     - '8108:8108'  # TypeSense API port
+  #   restart: on-failure
+  #   command: '--data-dir /data --api-key=${TYPESENSE_API_KEY} --enable-cors'
+  #   environment:
+  #     TYPESENSE_API_KEY: '${TYPESENSE_API_KEY}'  # Replace with a secure API key
+  #     TYPESENSE_DATA_DIR: '/data'
+  #   volumes:
+  #     - typesense-data:/data
+  #   networks:
+  #     - timbu
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8108/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  pg_data:

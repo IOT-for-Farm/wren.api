@@ -38,18 +38,9 @@ async def create_inventory(
             db=db, 
             organization_id=organization_id,
         )
-
-    # Get product price
-    product_price = ProductPrice.fetch_one_by_field(
-        db=db,
-        product_id=payload.product_id,
-        is_active=True
-    )
     
     inventory = Inventory.create(
         db=db,
-        cost_price=product_price.cost_price,
-        selling_price=product_price.selling_price,
         **payload.model_dump(exclude_unset=True)
     )
 

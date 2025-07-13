@@ -12,6 +12,9 @@ def get_field_differences(instance):
     changes = {}
     
     for attr in instance.__table__.columns:
+        if attr.name in ['created_at', 'updated_at']:
+            continue
+        
         history = get_history(instance, attr.name)
         
         if history.has_changes():
@@ -19,26 +22,27 @@ def get_field_differences(instance):
             new = history.added[0] if history.added else None
             
             if old != new:
-                # changes.append(f"{attr.name}: '{old}' → '{new}'")
-                # changes.append({
-                #     f"{attr.name}": {
-                #         "old": old,
-                #         "new": new
-                #     }
-                # })
-                
                 changes[attr.name] = {
                     "old": old,
                     "new": new
                 }
                 
-    # return "\n".join(changes) if changes else "No changes"
-    return json.dumps(changes) if changes else json.dumps({})
+    return json.dumps(changes, default=str) if changes else json.dumps({}, default=str)
 
 
 def generate_description(instance, action: str):
     if action.lower() == "create":
-        data = {c.name: getattr(instance, c.name) for c in instance.__table__.columns}
+        data = {
+            c.name: getattr(instance, c.name) 
+            for c in instance.__table__.columns
+            if c.name not in ['id', 'is_deleted', 'created_at', 'updated_at']
+        }
+        
+        # del data['id']
+        # del data['is_deleted']
+        # del data['created_at']
+        # del data['updated_at']
+        
         return json.dumps(data, default=str)
     
     elif action.lower() == "update":

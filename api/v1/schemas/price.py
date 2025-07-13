@@ -16,13 +16,13 @@ class PriceBase(BaseModel):
     
     @field_validator("start_date")
     def validate_start_date(cls, v):
-        if v and v < dt.datetime.now():
+        if v and v < dt.datetime.now(dt.timezone.utc):
             raise ValueError("Start date cannot be in the past.")
         return v
 
     @field_validator("end_date")
     def validate_end_date(cls, v):
-        if v and v < dt.datetime.now():
+        if v and v < dt.datetime.now(dt.timezone.utc):
             raise ValueError("End date cannot be in the past.")
         return v
 
@@ -51,13 +51,15 @@ class PriceUpdate(BaseModel):
     
     @field_validator("start_date")
     def validate_start_date(cls, v):
-        if v and v < dt.datetime.now():
+        # if v and v.tzinfo is None:
+        #     v = v.replace(tzinfo=dt.timezone.utc)
+        if v and v < dt.datetime.now(dt.timezone.utc):
             raise ValueError("Start date cannot be in the past.")
         return v
 
     @field_validator("end_date")
     def validate_end_date(cls, v):
-        if v and v < dt.datetime.now():
+        if v and v < dt.datetime.now(dt.timezone.utc):
             raise ValueError("End date cannot be in the past.")
         return v
 
