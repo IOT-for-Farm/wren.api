@@ -67,7 +67,7 @@ class InvoiceService:
         )
         
         if send_notification:
-            template_data=invoice.to_dict()
+            template_data={"invoice": invoice.to_dict()}
             
             if customer:
                 template_data['customer'] = customer.to_dict()
