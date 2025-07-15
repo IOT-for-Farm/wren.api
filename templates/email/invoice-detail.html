@@ -36,9 +36,11 @@
                                     </td>
                                     <td width="50%" style="vertical-align:top;">
                                         <h3 style="color:#2C3E50;margin-top:0;">To:</h3>
-                                        <p style="margin:5px 0;">{{invoice.customer.name}}</p>
+                                        <p style="margin:5px 0;">{{customer.business_partner.first_name}} {{customer.business_partner.last_name}}</p>
                                         {% if invoice.order and invoice.order.customer_email %}
                                         <p style="margin:5px 0;">{{invoice.order.customer_email}}</p>
+                                        {% else %}
+                                        <p style="margin:5px 0;">{{customer.business_partner.email}}</p>
                                         {% endif %}
                                     </td>
                                 </tr>
