@@ -77,12 +77,16 @@ class FileService:
         
         file_url = f"{config('API_URL')}/{file_path}" if not payload.url else payload.url,  # TODO: fix up. generate url by uploading to a storage location
         if add_to_db:
-            # Find the highest position for the given model_name
-            max_position = (
+            # Find the highest position for the given model_name and possible model_id
+             query = (
                 db.query(sa.func.max(File.position))
                 .filter(File.model_name == payload.model_name)
-                .scalar()
-            ) or 0
+            )
+            
+        if payload.model_id:
+            query = query.filter(File.model_id == payload.model_id)
+            
+            max_position = query.scalar() or 0
             
             # Save file metadata to database
             file_instance = File.create(
@@ -207,29 +211,40 @@ class FileService:
 
         current_position = file.position
         model_name = file.model_name
+        model_id = file.model_id
 
         if new_position == current_position:
             return  # No change needed
 
-        # Shift positions of other filees accordingly
+        # Shift positions of other files accordingly
         if new_position < current_position:
             # Moving up: shift others down
-            db.query(File).filter(
+            query = db.query(File).filter(
                 File.model_name == model_name,
                 File.position >= new_position,
                 File.position < current_position,
                 File.id != file.id
-            ).update({File.position: File.position + 1}, synchronize_session=False)
+            )
+            
+            if model_id:
+                query = query.filter(File.model_id == model_id)
+            
+            query.update({File.position: File.position + 1}, synchronize_session="fetch")
         else:
             # Moving down: shift others up
-            db.query(File).filter(
+            query = db.query(File).filter(
                 File.model_name == model_name,
                 File.position <= new_position,
                 File.position > current_position,
                 File.id != file.id
-            ).update({File.position: File.position - 1}, synchronize_session=False)
+            )
+            
+            if model_id:
+                query = query.filter(File.model_id == model_id)
+            
+            query.update({File.position: File.position - 1}, synchronize_session="fetch")
 
         # Set new position for the dragged file
         file.position = new_position
-
         db.commit()
+        db.refresh(file)

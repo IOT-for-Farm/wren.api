@@ -13,6 +13,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware  # required by google oauth
 from config import config
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from api.db.database import create_database, get_db
 from api.utils.loggers import create_logger
@@ -22,6 +25,7 @@ from api.utils.telex_notification import TelexNotification
 from api.v1.models import register_model_hooks
 from api.v1.routes import v1_router
 from api.utils.settings import settings
+from api.utils.port_checker import find_free_port
 
 
 create_database()
@@ -39,10 +43,9 @@ app = FastAPI(
     title='Wren API Documentation'
 )
 
-# Mount Jinja templates and static files
-# email_templates = Jinja2Templates(directory='api/core/dependencies/email/templates')
-# EMAIL_STATIC_DIR = 'api/core/dependencies/email/static'
-# app.mount(f'/{EMAIL_STATIC_DIR}', StaticFiles(directory=EMAIL_STATIC_DIR), name='email-static')
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 TEMP_DIR = './tmp/media'
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -245,7 +248,11 @@ async def exception(request: Request, exc: Exception):
 if __name__ == "__main__":
     uvicorn.run(
         "main:app", 
-        port=7001, 
+        host='0.0.0.0',
+        port=find_free_port(
+            port=config('PORT', cast=int, default=7001),
+            is_production=config('PYTHON_ENV') == "production"
+        ), 
         reload=True,
         workers=4,
         reload_excludes=['logs/']

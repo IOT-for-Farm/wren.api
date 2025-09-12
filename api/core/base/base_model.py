@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 import sqlalchemy as sa
 from sqlalchemy.orm import Session, class_mapper
@@ -7,7 +8,10 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from inspect import getmembers
 
 from api.db.database import Base
+from api.utils.loggers import create_logger
 
+
+logger = create_logger(__name__)
 
 class BaseTableModel(Base):
     """This model creates helper methods for all models"""
@@ -20,12 +24,22 @@ class BaseTableModel(Base):
     id = sa.Column(sa.String, primary_key=True, index=True, default=lambda: str(uuid4().hex))
     unique_id = sa.Column(sa.String, nullable=True)
     is_deleted = sa.Column(sa.Boolean, server_default='false')
-    created_at = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now())
-    updated_at = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now())
+    created_at = sa.Column(sa.DateTime(timezone=True), default=datetime.now(timezone.utc))
+    updated_at = sa.Column(sa.DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
     
-    def to_dict(self, excludes: List[str] = []) -> Dict[str, Any]:
+    def to_dict(self, excludes: List[str] = [], visited=None) -> Dict[str, Any]:
         """Returns a dictionary representation of the instance"""
+        
+        # Preventing recursion error
+        if visited is None:
+            visited = set()
+
+        if self.id in visited:
+            logger.info(f'Recursion error prevented on table {self.__tablename__} with id {self.id}')
+            return {}  # prevent infinite loop
+
+        visited.add(self.id)
         
         obj_dict = self.__dict__.copy()
         
@@ -98,7 +112,7 @@ class BaseTableModel(Base):
          
     
     @classmethod
-    def fetch_by_id(cls, db: Session, id: str):
+    def fetch_by_id(cls, db: Session, id: str, error_message: Optional[str] = None):
         """Fetches a single instance by ID. (ignores soft-deleted records).\n
         If checking by ID fails, it checks by unique id before then throwing an error if it fails.
         """
@@ -109,19 +123,26 @@ class BaseTableModel(Base):
             obj = db.query(cls).filter_by(unique_id=id, is_deleted=False).first()
             
             if obj is None:
-                raise HTTPException(status_code=404, detail=f"Record not found in table `{cls.__tablename__}`")
+                raise HTTPException(status_code=404, detail=error_message or f"Record not found in table `{cls.__tablename__}`")
             
         return obj
     
 
     @classmethod
-    def fetch_one_by_field(cls, db: Session, throw_error: bool=True, **kwargs):
+    def fetch_one_by_field(
+        cls, 
+        db: Session, 
+        throw_error: bool=True, 
+        error_message: Optional[str] = None, 
+        status_code: int = 404, 
+        **kwargs
+    ):
         """Fetches one unique record that match the given field(s)"""
         
         kwargs["is_deleted"] = False
         obj = db.query(cls).filter_by(**kwargs).first()
         if obj is None and throw_error:
-            raise HTTPException(status_code=404, detail=f"Record not found in table `{cls.__tablename__}`")
+            raise HTTPException(status_code=status_code, detail=error_message or f"Record not found in table `{cls.__tablename__}`")
         return obj
     
     
@@ -180,12 +201,11 @@ class BaseTableModel(Base):
         
 
     @classmethod
-    def update(cls, db: Session, id: str, **kwargs):
+    def update(cls, db: Session, id: str, error_message: Optional[str] = None, **kwargs):
         """Updates an instance with the given ID"""
         
-        obj = db.query(cls).filter_by(id=id, is_deleted=False).first()
-        if obj is None:
-            raise HTTPException(status_code=404, detail=f"Record not found in table `{cls.__tablename__}`")
+        obj = cls.fetch_by_id(db=db, id=id, error_message=error_message)
+        
         for key, value in kwargs.items():
             setattr(obj, key, value)
         db.commit()
@@ -194,25 +214,19 @@ class BaseTableModel(Base):
     
 
     @classmethod
-    def soft_delete(cls, db: Session, id: str):
+    def soft_delete(cls, db: Session, id: str, error_message: Optional[str] = None):
         """Performs a soft delete by setting is_deleted to True"""
         
-        obj = db.query(cls).filter_by(id=id, is_deleted=False).first()
-        if obj is None:
-            raise HTTPException(status_code=404, detail=f"Record not found in table `{cls.__tablename__}`")
-        
+        obj = cls.fetch_by_id(db=db, id=id, error_message=error_message)
         obj.is_deleted = True
         db.commit()
         
 
     @classmethod
-    def hard_delete(cls, db: Session, id: str):
+    def hard_delete(cls, db: Session, id: str, error_message: Optional[str] = None):
         """Permanently deletes an instance by ID or unique_id in case ID fails."""
         
-        obj = db.query(cls).filter_by(id=id).first()
-        if obj is None:
-            raise HTTPException(status_code=404, detail=f"Record not found in table `{cls.__tablename__}`")
-        
+        obj = cls.fetch_by_id(db=db, id=id, error_message=error_message)
         db.delete(obj)
         db.commit()
 
@@ -269,3 +283,4 @@ class BaseTableModel(Base):
         # Apply pagination
         offset = (page - 1) * per_page
         return query, query.offset(offset).limit(per_page).all(), count
+

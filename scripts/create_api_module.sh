@@ -38,6 +38,7 @@ EOF
             cat <<EOF > $target_file
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from slowapi.decorator import limiter
 
 from api.db.database import get_db
 from api.utils import paginator, helpers

@@ -13,7 +13,7 @@ from api.utils.mime_types import EXTENSION_TO_MIME_TYPES_MAPPING
 from api.v1.models.file import File
 from api.v1.schemas.file import FileBase
 from api.v1.services.file import FileService
-from config import config
+from decouple import config
 
 
 logger = create_logger(__name__)
@@ -68,57 +68,7 @@ class MinioService:
             return url
         except S3Error as s3_error:
             print(f'An error occured: {s3_error}')
-
-    
-    # def upload_to_minio(
-    #     cls, 
-    #     folder_name: str, 
-    #     source_file: str, 
-    #     destination_file: str = str(uuid4().hex),
-    #     content_type: str = 'application/octet-stream'
-    # ):
-    #     """This function saves a file to a minio bucket
-
-    #     Args:
-    #         folder_name (str): Name of the bucket to save the file to
-    #         source_file (str): File path to the file to be save to minio bucket
-    #         destination_file (str): Path to where the file should be saved in minio bucket
-    #     """
-
-    #     # file_extension = source_file.split('.')[-1]
-    #     # content_type = EXTENSION_TO_MIME_TYPES_MAPPING[file_extension]
-    #     bucket_name = config("APP_NAME")
-    #     destination = f"{folder_name}/{destination_file}"
-
-    #     try:
-    #         if not cls.minio_client.bucket_exists(bucket_name):
-    #             cls.minio_client.make_bucket(bucket_name)
             
-    #         cls.__make_public(bucket_name)
-
-    #         # Upload file
-    #         cls.minio_client.fput_object(
-    #             bucket_name=bucket_name,
-    #             object_name=destination,
-    #             file_path=source_file,
-    #             content_type=content_type
-    #         )
-
-    #         preview_url = cls.generate_presigned_url(
-    #             object_name=destination,
-    #             response_content_disposition="inline"
-    #         ).split('?')[0]
-
-    #         # Generate download URL (attachment content disposition)
-    #         download_url = cls.generate_presigned_url(
-    #             object_name=destination,
-    #             response_content_disposition=f"attachment; filename={destination}"
-    #         )
-
-    #         return preview_url, download_url
-
-    #     except S3Error as s3_error:
-    #         print(f'An error occured: {s3_error}')
 
     @classmethod
     async def upload_to_minio(
@@ -130,28 +80,30 @@ class MinioService:
         allowed_extensions: List[str],
         file_label: str = None,
         file_description: str = None,
+        add_to_db: bool = False
     ):
         '''This function uploads a file to a bucket bucket in minio'''
         
         # Create file in db
         new_file = await FileService.upload_file(
             db=db,
-            file_to_upload=file,
             payload=FileBase(
+                file=file,
                 model_id=model_id,
                 model_name=model_name,
                 label=file_label,
                 description=file_description
             ),
-            allowed_extensions=allowed_extensions
+            allowed_extensions=allowed_extensions,
+            add_to_db=add_to_db
         )
 
         bucket_name = config("APP_NAME")
-        filename = new_file.file_name
+        filename = new_file.file_name if isinstance(new_file, File) else new_file['file_name']
         file_extension = filename.split('.')[-1]
         content_type = EXTENSION_TO_MIME_TYPES_MAPPING[file_extension]
         destination = f"{model_name}/{model_id}/{filename}"  # file extensuion is already included in filename
-        source_file = new_file.file_path
+        source_file = new_file.file_path if isinstance(new_file, File) else new_file['file_path']
         
         try:
             if not cls.minio_client.bucket_exists(bucket_name):
@@ -234,3 +186,4 @@ class MinioService:
         
         except requests.RequestException as e:
             print(f"Error downloading large file: {e}")
+
