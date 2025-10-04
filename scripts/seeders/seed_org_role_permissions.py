@@ -6,11 +6,9 @@ ROOT_DIR = pathlib.Path(__file__).parent.parent.parent
 # ADD PROJECT ROOT TO IMPORT SEARCH SCOPE
 sys.path.append(str(ROOT_DIR))
 
-from api.db.database import get_db, get_db_with_ctx_manager
+from api.db.database import get_db_with_ctx_manager
 from api.core.dependencies.permissions import ROLE_PERMISSIONS
 from api.v1.models.organization import OrganizationRole, Organization
-
-# db = next(get_db())
 
 def seed_role_permissions():
     """Seed role permissions into the database."""

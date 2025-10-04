@@ -31,7 +31,7 @@ class BusinessPartner(BaseTableModel):
     company_name = sa.Column(sa.String, nullable=True)
 
     # Metadata
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_active = sa.Column(sa.Boolean, default=True)
 
     # Extensibility
     additional_info = sa.Column(sa.JSON, default={})

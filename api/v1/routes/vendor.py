@@ -60,6 +60,7 @@ async def create_vendor(
 
     vendor = Vendor.create(
         db=db,
+        organization_id=organization_id,
         business_partner_id=business_partner_id,
         **payload.model_dump(exclude_unset=True, exclude=['tag_ids', 'category_ids'])
     )

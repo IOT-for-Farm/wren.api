@@ -7,15 +7,19 @@ from api.v1.models.business_partner import BusinessPartner
 from api.v1.schemas.vendor import VendorType
 
 
-class Vendor(BusinessPartner):
+class Vendor(BaseTableModel):
     __tablename__ = 'vendors'
+    
+    id = None
     
     business_partner_id = sa.Column(
         sa.String, 
         sa.ForeignKey('business_partners.id'),
         primary_key=True,
         nullable=False, index=True
-    )
+    )  # primary key for this model
+    
+    organization_id = sa.Column(sa.String, sa.ForeignKey('organizations.id'), index=True)
     
     vendor_type = sa.Column(sa.String, default=VendorType.retailer.value)
 
@@ -26,7 +30,7 @@ class Vendor(BusinessPartner):
     
     payment_terms = sa.Column(sa.String, nullable=True)  # prepaid, commission
     commission_percentage = sa.Column(sa.Float, nullable=True)
-    
+        
     business_partner = relationship(
         'BusinessPartner',
         lazy='selectin',
@@ -38,7 +42,7 @@ class Vendor(BusinessPartner):
     tags = relationship(
         "Tag",
         secondary='tag_association',
-        primaryjoin="and_(Vendor.id==foreign(TagAssociation.entity_id), "
+        primaryjoin="and_(Vendor.business_partner_id==foreign(TagAssociation.entity_id), "
                    "TagAssociation.model_type=='vendors', "
                    "TagAssociation.is_deleted==False)",
         secondaryjoin="and_(Tag.id==foreign(TagAssociation.tag_id), "
@@ -52,7 +56,7 @@ class Vendor(BusinessPartner):
         'File',
         backref='vendor_photos',
         # primaryjoin='and_(Vendor.id == foreign(File.model_id), File.is_deleted == False, Vendor.organization_id==File.organization_id)',
-        primaryjoin='and_(Vendor.id == foreign(File.model_id), File.is_deleted == False)',
+        primaryjoin='and_(Vendor.business_partner_id == foreign(File.model_id), File.is_deleted == False, Vendor.organization_id==File.organization_id)',
         lazy='selectin',
         viewonly=True
     )
@@ -60,7 +64,7 @@ class Vendor(BusinessPartner):
     categories = relationship(
         'Category',
         secondary='category_association',
-        primaryjoin='and_(foreign(CategoryAssociation.entity_id)==Vendor.id, '
+        primaryjoin='and_(foreign(CategoryAssociation.entity_id)==Vendor.business_partner_id, '
                    'CategoryAssociation.is_deleted==False, '
                    'CategoryAssociation.model_type=="vendors")',
         secondaryjoin='and_(Category.id==foreign(CategoryAssociation.category_id), '
@@ -72,7 +76,7 @@ class Vendor(BusinessPartner):
     
     accounts = relationship(
         'Account',
-        primaryjoin='and_(Vendor.id==foreign(Account.owner_id), Account.is_deleted==False)',
+        primaryjoin='and_(Vendor.business_partner_id==foreign(Account.owner_id), Account.is_deleted==False)',
         backref='vendor_accounts',
         lazy='selectin',
         viewonly=True

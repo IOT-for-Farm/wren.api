@@ -12,4 +12,4 @@ class ContactInfo(BaseTableModel):
     contact_type = sa.Column(sa.String, nullable=False, index=True)  # email or phone
     contact_data = sa.Column(sa.String, nullable=False)
     phone_country_code = sa.Column(sa.String)
-    is_primary = sa.Column(sa.Boolean, server_default="false")
+    is_primary = sa.Column(sa.Boolean, default=False)

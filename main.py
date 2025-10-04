@@ -156,8 +156,8 @@ async def validation_exception(request: Request, exc: RequestValidationError):
         {
             "loc": error["loc"], 
             "msg": error["msg"], 
-            # "msg": error["msg"].split(',')[-1].strip(), 
             "type": error["type"],
+            # "msg": error["msg"].split(',')[-1].strip(), 
             # "detailed_message": f"{error['type'].capitalize()} {error['loc'][0]}: {error['loc'][1]}- {error['msg'].split(',')[-1].strip()}"
         } for error in exc.errors()
     ]

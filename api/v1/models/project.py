@@ -108,7 +108,7 @@ class ProjectMember(BaseTableModel):
     user_id = sa.Column(sa.String, sa.ForeignKey('users.id'), index=True, nullable=False)
     project_id = sa.Column(sa.String, sa.ForeignKey('projects.id'), index=True, nullable=False)
     role = sa.Column(sa.String, nullable=False)  # owner, admin, member, viewer
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_active = sa.Column(sa.Boolean, default=True)
     
 
 class TaskAssignee(BaseTableModel):
@@ -116,4 +116,4 @@ class TaskAssignee(BaseTableModel):
     
     user_id = sa.Column(sa.String, sa.ForeignKey('users.id'), index=True)
     task_id = sa.Column(sa.String, sa.ForeignKey('tasks.id'), index=True)
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_active = sa.Column(sa.Boolean, default=True)

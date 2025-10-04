@@ -79,8 +79,8 @@ class OrganizationMember(BaseTableModel):
     # Member Details
     title = sa.Column(sa.String(100))
     join_date = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now())
-    is_primary_contact = sa.Column(sa.Boolean, server_default='false')
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_primary_contact = sa.Column(sa.Boolean, default=False)
+    is_active = sa.Column(sa.Boolean, default=True)
     
     # Relationships
     user = relationship("User", backref='organizations', uselist=False, lazy='selectin')

@@ -23,7 +23,7 @@ class BaseTableModel(Base):
     
     id = sa.Column(sa.String, primary_key=True, index=True, default=lambda: str(uuid4().hex))
     unique_id = sa.Column(sa.String, nullable=True)
-    is_deleted = sa.Column(sa.Boolean, server_default='false')
+    is_deleted = sa.Column(sa.Boolean, default=False)
     created_at = sa.Column(sa.DateTime(timezone=True), default=datetime.now(timezone.utc))
     updated_at = sa.Column(sa.DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 

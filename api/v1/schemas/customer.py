@@ -56,7 +56,7 @@ class Gender(str, Enum):
     
 
 class CustomerBase(BaseModel):
-
+    
     unique_id: Optional[str] = None
     
     language: Optional[str] = 'English'

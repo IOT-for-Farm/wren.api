@@ -22,7 +22,7 @@ class Content(BaseTableModel):
     author_id = sa.Column(sa.String, sa.ForeignKey("users.id"), nullable=False)
     content_template_id = sa.Column(sa.String, sa.ForeignKey("content_templates.id"), nullable=True)
     content_type = sa.Column(sa.String, default=ContentType.ARTICLE.value)  # e.g., article, ad, page
-    is_visible_on_website = sa.Column(sa.Boolean, server_default="true")
+    is_visible_on_website = sa.Column(sa.Boolean, default=True)
     visibility = sa.Column(sa.String, default=ContentVisibility.PUBLIC.value)  # public, private, unlisted
     cover_image_url = sa.Column(sa.String, nullable=True)
     content_url = sa.Column(sa.String, nullable=True)
@@ -87,7 +87,7 @@ class ContentVersion(BaseTableModel):
     title = sa.Column(sa.String, nullable=False)
     body = sa.Column(sa.Text, nullable=True)  # HTML or markdown body
     content_type = sa.Column(sa.String, default=ContentType.ARTICLE.value)  # e.g., article, ad, page
-    is_visible_on_website = sa.Column(sa.Boolean, server_default="true")
+    is_visible_on_website = sa.Column(sa.Boolean, default=True)
     visibility = sa.Column(sa.String, default=ContentVisibility.PUBLIC.value)  # public, private, unlisted
     cover_image_url = sa.Column(sa.String, nullable=True)
     content_template_id = sa.Column(sa.String, sa.ForeignKey("content_templates.id"), nullable=True)

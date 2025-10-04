@@ -15,7 +15,7 @@ class Apikey(BaseTableModel):
     key_hash = sa.Column(sa.String, nullable=False, index=True)
     prefix= sa.Column(sa.String(8), nullable=False, unique=True)
     app_name = sa.Column(sa.String, index=True)
-    is_active = sa.Column(sa.Boolean, server_default="true")
+    is_active = sa.Column(sa.Boolean, default=True)
     last_used_at = sa.Column(sa.DateTime)
     
     # Relationships

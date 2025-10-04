@@ -30,10 +30,10 @@ class Event(BaseTableModel):
     location = sa.Column(sa.String, nullable=True)  # e.g., Zoom link or room number
     location_type = sa.Column(sa.String, default="virtual")  # or "physical"
     
-    allow_rsvp = sa.Column(sa.Boolean, server_default='false', index=True)
+    allow_rsvp = sa.Column(sa.Boolean, default=False, index=True)
     attendee_limit = sa.Column(sa.Integer)
     
-    is_recurring = sa.Column(sa.Boolean, server_default='false')
+    is_recurring = sa.Column(sa.Boolean, default=False)
     recurrence_rule = sa.Column(sa.String, nullable=True)  # e.g., "FREQ=WEEKLY;BYDAY=MO"
 
     creator_id = sa.Column(sa.String, sa.ForeignKey("users.id"), index=True)

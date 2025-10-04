@@ -24,8 +24,8 @@ class Sale(BaseTableModel):
     
     currency_code = sa.Column(sa.String(10), default='NGN')
     
-    customer_id = sa.Column(sa.String, sa.ForeignKey('customers.business_partner_id'))
-    vendor_id = sa.Column(sa.String, sa.ForeignKey('vendors.business_partner_id'))
+    customer_id = sa.Column(sa.String)
+    vendor_id = sa.Column(sa.String)
     
     tags = relationship(
         "Tag",
@@ -44,14 +44,16 @@ class Sale(BaseTableModel):
         'Vendor',
         backref='sales',
         uselist=False,
-        lazy='selectin'
+        lazy='selectin',
+        primaryjoin='foreign(Sale.vendor_id)==Vendor.business_partner_id'
     )
     
     customer = relationship(
         'Customer',
         backref='sales',
         uselist=False,
-        lazy='selectin'
+        lazy='selectin',
+        primaryjoin='foreign(Sale.customer_id)==Customer.business_partner_id'
     )
     
     product = relationship(

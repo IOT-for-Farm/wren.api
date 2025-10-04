@@ -1,20 +1,26 @@
 import sqlalchemy as sa
+from datetime import datetime, timezone
 from sqlalchemy import event
 from sqlalchemy.orm import relationship, Session
 
 from api.core.base.base_model import BaseTableModel
+from api.db.database import Base
 from api.v1.models.business_partner import BusinessPartner
 
 
-class Customer(BusinessPartner):
+class Customer(BaseTableModel):
     __tablename__ = 'customers'
+    
+    id = None
     
     business_partner_id = sa.Column(
         sa.String, 
         sa.ForeignKey('business_partners.id'),
         primary_key=True,
         nullable=False, index=True
-    )
+    )  # primary key for this model
+    
+    organization_id = sa.Column(sa.String, sa.ForeignKey('organizations.id'), index=True)
     
     language = sa.Column(sa.String)
     gender = sa.Column(sa.String)
@@ -37,7 +43,7 @@ class Customer(BusinessPartner):
     
     accounts = relationship(
         'Account',
-        primaryjoin='and_(Customer.id==foreign(Account.owner_id), Account.is_deleted==False)',
+        primaryjoin='and_(Customer.business_partner_id==foreign(Account.owner_id), Account.is_deleted==False)',
         backref='customer_accounts',
         lazy='selectin',
     )

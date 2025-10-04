@@ -8,10 +8,7 @@ ROOT_DIR = pathlib.Path(__file__).parent.parent.parent
 sys.path.append(str(ROOT_DIR))
 
 from api.v1.models.content import ContentTemplate
-from api.db.database import get_db
-
-
-db = next(get_db())
+from api.db.database import get_db_with_ctx_manager
 
 content_templates = [
     {
@@ -109,39 +106,40 @@ content_templates = [
 def seed_content_templates():
     '''Seed content templates'''
     
-    content_templates_dir = f"{ROOT_DIR}/templates/content/default"
-        
-    for template in content_templates:    
-        with open(f"{content_templates_dir}/{template['content_type']}.html", "r") as file:
-            html = file.read()
+    with get_db_with_ctx_manager() as db:
+        content_templates_dir = f"{ROOT_DIR}/templates/content/default"
             
-        existing_template = ContentTemplate.fetch_one_by_field(
-            db=db, throw_error=False,
-            name=template['name'],
-            content_type=template['content_type'],
-            organization_id='-1'
-        )
-        
-        if not existing_template:
-            # Store template in db
-            new_template = ContentTemplate.create(
-                db=db,
+        for template in content_templates:    
+            with open(f"{content_templates_dir}/{template['content_type']}.html", "r") as file:
+                html = file.read()
+                
+            existing_template = ContentTemplate.fetch_one_by_field(
+                db=db, throw_error=False,
                 name=template['name'],
                 content_type=template['content_type'],
-                description=template['description'],
-                body=html,
                 organization_id='-1'
             )
-            print(f"ContentTemplate {new_template.name} created")
-        
-        else:
-            # Update template
-            updated_template = ContentTemplate.update(
-                db=db, id=existing_template.id,
-                body=html,
-                description=template['description']
-            )
-            print(f"ContentTemplate {updated_template.name} updated")
+            
+            if not existing_template:
+                # Store template in db
+                new_template = ContentTemplate.create(
+                    db=db,
+                    name=template['name'],
+                    content_type=template['content_type'],
+                    description=template['description'],
+                    body=html,
+                    organization_id='-1'
+                )
+                print(f"ContentTemplate {new_template.name} created")
+            
+            else:
+                # Update template
+                updated_template = ContentTemplate.update(
+                    db=db, id=existing_template.id,
+                    body=html,
+                    description=template['description']
+                )
+                print(f"ContentTemplate {updated_template.name} updated")
     
 
 if __name__ == "__main__":

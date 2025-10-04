@@ -25,7 +25,7 @@ class Inventory(BaseTableModel):
     
     # currency_code = sa.Column(sa.String(10), nullable=True, index=True)
     
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_active = sa.Column(sa.Boolean, default=True)
     
     # Relationships
     product = relationship("Product")

@@ -37,9 +37,9 @@ class Form(BaseTableModel):
     purpose = sa.Column(sa.String, nullable=True)
     url = sa.Column(sa.String, nullable=True)  # default will be generated if none is
     fields = sa.Column(sa.JSON)  # contains the form fields. Should contain label, type eg text, textarea, number, email and all other html field types
-    is_active = sa.Column(sa.Boolean, server_default='true')
-    receive_response_email_notifications = sa.Column(sa.Boolean, server_default='false')
-    allow_more_than_one_user_submission = sa.Column(sa.Boolean, server_default='false')
+    is_active = sa.Column(sa.Boolean, default=True)
+    receive_response_email_notifications = sa.Column(sa.Boolean, default=False)
+    allow_more_than_one_user_submission = sa.Column(sa.Boolean, default=False)
     
     responses = relationship('FormResponse', back_populates='form')
     form_template = relationship(
@@ -58,7 +58,7 @@ class FormResponse(BaseTableModel):
     email = sa.Column(sa.String, nullable=True)  # email of the user who filled the form
     data = sa.Column(sa.JSON)  # can contain form responses for forms created. Should contain label, type, and response
     status = sa.Column(sa.String, default='draft')
-    send_email_to_respondent = sa.Column(sa.Boolean, server_default='false')
+    send_email_to_respondent = sa.Column(sa.Boolean, default=False)
     
     form = relationship('Form', back_populates='responses')
 

@@ -64,6 +64,7 @@ async def create_customer(
 
     customer = Customer.create(
         db=db,
+        organization_id=organization_id,
         business_partner_id=business_partner_id,
         **payload.model_dump(exclude_unset=True)
     )

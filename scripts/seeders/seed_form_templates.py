@@ -6,7 +6,7 @@ ROOT_DIR = pathlib.Path(__file__).parent.parent.parent
 # ADD PROJECT ROOT TO IMPORT SEARCH SCOPE
 sys.path.append(str(ROOT_DIR))
 
-from api.db.database import get_db
+from api.db.database import get_db_with_ctx_manager
 from api.v1.models.form import FormTemplate
 
 # Define the default form templates
@@ -84,39 +84,38 @@ form_templates = [
 ]
 
 
-db = next(get_db())
-
 def seed_form_templates():
     """Seed default form templates into the database."""
     
-    for template in form_templates:
-        # Check if the form template already exists
-        existing_template = FormTemplate.fetch_one_by_field(
-            db=db, throw_error=False,
-            template_name=template['template_name'],
-            is_deleted=False,
-            organization_id='-1'
-        )
-        
-        if not existing_template:
-            # Create a new form template
-            FormTemplate.create(
-                db=db,
-                organization_id='-1',
-                **template
+    with get_db_with_ctx_manager() as db:
+        for template in form_templates:
+            # Check if the form template already exists
+            existing_template = FormTemplate.fetch_one_by_field(
+                db=db, throw_error=False,
+                template_name=template['template_name'],
+                is_deleted=False,
+                organization_id='-1'
             )
             
-            print(f'New form template: {template["template_name"]} created')
-        
-        else:
-            # Update the existing form template
-            FormTemplate.update(
-                db=db,
-                id=existing_template.id,
-                **template
-            )
+            if not existing_template:
+                # Create a new form template
+                FormTemplate.create(
+                    db=db,
+                    organization_id='-1',
+                    **template
+                )
+                
+                print(f'New form template: {template["template_name"]} created')
             
-            print(f'Form template: {template["template_name"]} updated')
+            else:
+                # Update the existing form template
+                FormTemplate.update(
+                    db=db,
+                    id=existing_template.id,
+                    **template
+                )
+                
+                print(f'Form template: {template["template_name"]} updated')
             
 
 if __name__ == "__main__":

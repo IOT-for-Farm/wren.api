@@ -12,7 +12,7 @@ class Department(BaseTableModel):
     name = sa.Column(sa.String(100), nullable=False)
     parent_id = sa.Column(sa.String, sa.ForeignKey("departments.id", ondelete="cascade"), index=True)
     additional_info = sa.Column(sa.JSON, default={})
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_active = sa.Column(sa.Boolean, default=True)
     
     # Relationships
     organization = relationship("Organization", backref="org_departments")
@@ -129,7 +129,7 @@ class DepartmentMember(BaseTableModel):
     user_id = sa.Column(sa.String, sa.ForeignKey("users.id"))
     department_id = sa.Column(sa.String, sa.ForeignKey("departments.id"))
     role_id = sa.Column(sa.String, sa.ForeignKey("department_roles.id"))
-    is_primary = sa.Column(sa.Boolean, server_default='false')
+    is_primary = sa.Column(sa.Boolean, default=False)
     join_date = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now())
     
     role = relationship(

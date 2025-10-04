@@ -18,6 +18,8 @@ class PaymentTerms(str, Enum):
 
 class VendorBase(BaseModel):
 
+    organization_id: str
+    
     unique_id: Optional[str] = None
     
     vendor_type: Optional[VendorType] = VendorType.manufacturer

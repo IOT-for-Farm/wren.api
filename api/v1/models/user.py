@@ -21,9 +21,9 @@ class User(BaseTableModel):
     country = sa.Column(sa.String, nullable=True)
     bio = sa.Column(sa.Text, nullable=True)
     address = sa.Column(sa.Text, nullable=True)
-    is_active = sa.Column(sa.Boolean, server_default='true')
-    # is_verified = sa.Column(sa.Boolean, server_default='false')
-    is_superuser = sa.Column(sa.Boolean, server_default='false')
+    is_active = sa.Column(sa.Boolean, default=True)
+    # is_verified = sa.Column(sa.Boolean, default=False)
+    is_superuser = sa.Column(sa.Boolean, default=False)
     last_login = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now())
     
     # organizations = relationship(

@@ -19,6 +19,6 @@ class Account(BaseTableModel):
     currency_code = sa.Column(sa.String(10), default='NGN')
     
     credit_limit = sa.Column(sa.Numeric(12, 2), default=0.00)
-    credit_allowed = sa.Column(sa.Boolean, server_default='false')
+    credit_allowed = sa.Column(sa.Boolean, default=False)
     
-    is_active = sa.Column(sa.Boolean, server_default='true')
+    is_active = sa.Column(sa.Boolean, default=True)

@@ -18,7 +18,7 @@ class Order(BaseTableModel):
     customer_phone = sa.Column(sa.String)
     customer_phone_country_code = sa.Column(sa.String)
     
-    customer_id = sa.Column(sa.String, sa.ForeignKey('customers.business_partner_id'))
+    customer_id = sa.Column(sa.String, index=True)
     
     # total_amount = sa.Column(sa.Numeric(12, 2), nullable=False)
     currency_code = sa.Column(sa.String(10), default='NGN')
@@ -34,7 +34,8 @@ class Order(BaseTableModel):
         'Customer',
         backref='orders',
         uselist=False,
-        lazy='selectin'
+        lazy='selectin',
+        primaryjoin='foreign(Order.customer_id)==Customer.business_partner_id'
     )
     
     @hybrid_property

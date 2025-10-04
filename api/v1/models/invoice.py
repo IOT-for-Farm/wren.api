@@ -18,8 +18,8 @@ class Invoice(BaseTableModel):
 
     organization_id = sa.Column(sa.String, sa.ForeignKey("organizations.id"), index=True)
     department_id = sa.Column(sa.String, sa.ForeignKey("departments.id"), index=True)
-    customer_id = sa.Column(sa.String, sa.ForeignKey("business_partners.id"), index=True)
-    vendor_id = sa.Column(sa.String, sa.ForeignKey("business_partners.id"), index=True)
+    customer_id = sa.Column(sa.String, index=True)
+    vendor_id = sa.Column(sa.String, index=True)
     order_id = sa.Column(sa.String, sa.ForeignKey("orders.id"), nullable=True, index=True)
     
     issue_date = sa.Column(sa.DateTime, default=sa.func.now())
@@ -48,11 +48,11 @@ class Invoice(BaseTableModel):
     def total(self):
         '''Get total amount for invoice'''
         
-        total_amount = (self.subtotal or 0) + (self.tax or 0) - (self.discount or 0)
+        total_amount = float(self.subtotal or 0) + float(self.tax or 0) - float(self.discount or 0)
         
         if self.items:
             for item in self.items:
-                total_amount += (item['rate'] * item['quantity'])
+                total_amount += float(item['rate'] * item['quantity'])
                 
         return total_amount
     
@@ -80,7 +80,7 @@ class Invoice(BaseTableModel):
         '''Get total amount remaining to be paid in the invoice'''
         
         total_paid = self.amount_paid
-        total_remaining = float(self.total) - total_paid
+        total_remaining = float(self.total) - float(total_paid)
         
         return total_remaining
 

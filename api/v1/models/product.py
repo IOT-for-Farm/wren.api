@@ -13,7 +13,7 @@ class Product(BaseTableModel):
 
     organization_id = sa.Column(sa.String, sa.ForeignKey("organizations.id", ondelete="CASCADE"), index=True)
     creator_id = sa.Column(sa.String, sa.ForeignKey("users.id"))
-    vendor_id = sa.Column(sa.String, sa.ForeignKey("vendors.business_partner_id"))
+    vendor_id = sa.Column(sa.String)
     parent_id = sa.Column(sa.String, sa.ForeignKey('products.id', ondelete="cascade"), index=True, nullable=True)
     
     name = sa.Column(sa.String, index=True, nullable=False)
@@ -21,7 +21,7 @@ class Product(BaseTableModel):
     slug = sa.Column(sa.String, nullable=True, index=True, unique=True)
     status = sa.Column(sa.String, nullable=False, default=ProductStatus.UNPUBLISHED.value, index=True)
     type = sa.Column(sa.String, nullable=False, default=ProductType.PHYSICAL.value, index=True)
-    is_available = sa.Column(sa.Boolean, server_default='true')
+    is_available = sa.Column(sa.Boolean, default=True)
     
     # previous_slugs = sa.Column(sa.JSON, default=[])
     attributes = sa.Column(sa.JSON, nullable=True, default={})
@@ -38,7 +38,8 @@ class Product(BaseTableModel):
         'Vendor',
         backref='products',
         uselist=False,
-        lazy='selectin'
+        lazy='selectin',
+        primaryjoin='foreign(Product.vendor_id)==Vendor.business_partner_id'
     )
     
     photos = relationship(
@@ -167,7 +168,7 @@ class ProductPrice(BaseTableModel):
     
     min_quantity = sa.Column(sa.Integer, default=1)  # Tiered pricing
     
-    is_active = sa.Column(sa.Boolean, server_default='true')  # Tiered pricing
+    is_active = sa.Column(sa.Boolean, default=True)  # Tiered pricing
     
     notes = sa.Column(sa.Text)
     
