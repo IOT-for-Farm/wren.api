@@ -331,3 +331,25 @@ def test_delete_product_unauthorized(client, session, current_org):
 
     assert response.status_code == 401
 
+
+def test_product_model_creation():
+    """Test Product model instantiation and basic properties"""
+    
+    product = Product(
+        id=uuid4().hex,
+        unique_id=helpers.generate_unique_id(name="Test Product"),
+        organization_id=ORG_ID,
+        name="Test Product Model",
+        slug="test-product-model",
+        description="A test product for model testing",
+        status="published",
+        type="physical",
+        is_available=True
+    )
+    
+    assert product.name == "Test Product Model"
+    assert product.slug == "test-product-model"
+    assert product.organization_id == ORG_ID
+    assert product.is_available is True
+    assert product.status == "published"
+
