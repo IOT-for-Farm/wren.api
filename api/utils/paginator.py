@@ -1,8 +1,16 @@
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
+from api.utils.loggers import create_logger
+from api.utils.cache_manager import cached, cache_manager
+from api.utils.database_optimizer import QueryOptimizer, monitor_query_performance
+
+logger = create_logger(__name__)
 
 
+@cached("total_count", ttl=300)  # Cache for 5 minutes
+@monitor_query_performance
 def total_row_count(model, db: Session, filters: Optional[Dict]=None):
+    """Get total row count with caching and performance monitoring"""
     return model.count(
         db, 
         add_deleted=False, 
@@ -38,6 +46,7 @@ def page_urls(page: int, size: int, count: int, endpoint: str):
     return paging
 
 
+@monitor_query_performance
 def build_model_paginated_response(
     db: Session,
     model,
@@ -173,3 +182,82 @@ def paginate_query(query, page: int, per_page: int):
     count = query.count()
     offset = (page - 1) * per_page
     return query.offset(offset).limit(per_page).all(), count
+
+
+@cached("optimized_pagination", ttl=180)  # Cache for 3 minutes
+@monitor_query_performance
+def optimized_paginate_query(
+    query, 
+    page: int, 
+    per_page: int,
+    use_optimized_count: bool = True
+):
+    """
+    Optimized pagination with query optimization and caching
+    
+    Args:
+        query: SQLAlchemy query object
+        page: Page number (1-based)
+        per_page: Items per page
+        use_optimized_count: Whether to use optimized count query
+        
+    Returns:
+        Tuple of (items, count)
+    """
+    # Use query optimizer for better performance
+    optimized_query = QueryOptimizer.optimize_pagination_query(query, page, per_page)
+    
+    # Get count with optimization
+    if use_optimized_count:
+        # Use approximate count for better performance on large tables
+        try:
+            count = optimized_query.count()
+        except Exception:
+            # Fallback to regular count
+            count = query.count()
+    else:
+        count = query.count()
+    
+    # Execute optimized query
+    items = optimized_query.all()
+    
+    logger.debug(f"Optimized pagination: page={page}, per_page={per_page}, count={count}")
+    return items, count
+
+
+def get_pagination_metadata(
+    page: int,
+    per_page: int,
+    total: int,
+    endpoint: str
+) -> Dict[str, any]:
+    """
+    Generate comprehensive pagination metadata
+    
+    Args:
+        page: Current page number
+        per_page: Items per page
+        total: Total number of items
+        endpoint: API endpoint for pagination links
+        
+    Returns:
+        Dictionary with pagination metadata
+    """
+    total_pages = (total + per_page - 1) // per_page  # Ceiling division
+    
+    return {
+        "current_page": page,
+        "per_page": per_page,
+        "total_items": total,
+        "total_pages": total_pages,
+        "has_next": page < total_pages,
+        "has_previous": page > 1,
+        "next_page": f"{endpoint}?page={page + 1}&per_page={per_page}" if page < total_pages else None,
+        "previous_page": f"{endpoint}?page={page - 1}&per_page={per_page}" if page > 1 else None,
+        "first_page": f"{endpoint}?page=1&per_page={per_page}",
+        "last_page": f"{endpoint}?page={total_pages}&per_page={per_page}" if total_pages > 0 else None,
+        "page_range": {
+            "start": (page - 1) * per_page + 1 if total > 0 else 0,
+            "end": min(page * per_page, total)
+        }
+    }
